@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 window = tk.Tk()
-window.geometry("1980x1200")
+window.geometry('1300x768')
 window.configure(background="black")
 currentScreen = ""
 algData = []

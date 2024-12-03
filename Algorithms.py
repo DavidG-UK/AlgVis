@@ -266,4 +266,4 @@ def greedyBFS(adjMatrix, root, goal):
         goalPath.reverse()
 
     return goalPath, nodeTable
-print(insertion([1, 4, 6, 3, 2, 1, 2, 2, 4]))
+#print(insertion([1, 4, 6, 3, 2, 1, 2, 2, 4]))

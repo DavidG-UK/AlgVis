@@ -1,7 +1,7 @@
 import sys
-import Algortihms
-import random
+import time
 import math
+import Algorithms
 
 linesExecuted = 0
 
@@ -13,7 +13,8 @@ def trace_lines(frame, event, arg):
         filename = frame.f_globals["__file__"]
         with open(filename) as f:
             current_line = f.readlines()[lineno - 1].strip()
-            #print(f"Executing line {lineno}: {current_line}")
+            print(f"Executing line {lineno}: {current_line}")
+        time.sleep(1)
     return trace_lines
 
 def estimate_On(numLines, dataInput):
@@ -30,31 +31,18 @@ def estimate_On(numLines, dataInput):
 
     for i in range(len(complexities)):
         if numLines < complexities[i][0]:
-            #print(numLines)
-            #print(complexities[i][0])
-            #print(complexities[i][0] / numLines, numLines / complexities[i-1][0])
             return complexities[i]
-    
-#for i in range(2):
-    # dataInput = []
-    # linesExecuted = 0
-    # for j in range(5 * (i+1)):
-    #     dataInput.append(random.randint(1, 999))
 
-N = 60
-adjMatrix = Algortihms.generateMatrix(N)
+N = 5
+adjMatrix = Algorithms.generateMatrix(N)
+
 sys.settrace(trace_lines)
-#sorted = Algortihms.quick(dataInput)
-goalpath, nodetable = Algortihms.Astar(adjMatrix, 0, N - 1)
+goalpath, nodetable = Algorithms.Astar(adjMatrix, 0, N - 1)
 sys.settrace(None)
-On_complexity = estimate_On(linesExecuted, N)
-print(linesExecuted, On_complexity) 
+print(linesExecuted)
+
 linesExecuted = 0
 sys.settrace(trace_lines)
-#sorted = Algortihms.quick(dataInput)
-goalpath, nodetable = Algortihms.greedyBFS(adjMatrix, 0, N - 1)
+goalpath, nodetable = Algorithms.greedyBFS(adjMatrix, 0, N - 1)
 sys.settrace(None)
-On_complexity = estimate_On(linesExecuted, N)
-print(linesExecuted, On_complexity)
-
-    #print(goalpath, linesExecuted, On_complexity) # linesExecuted / On_complexity[0]
+print(linesExecuted)
