@@ -14,7 +14,7 @@ MAXSCREENWIDTH = 1300
 MAXSCREENHEIGHT = 500
 padX = 100 / 2
 MAXBARWIDTH = 100
-MAXBARHEIGHT = 400
+MAXBARHEIGHT = 200
 rectIdData = []
 posCoords = []
 canvas = tk.Canvas(window, bg='light grey')
@@ -27,16 +27,17 @@ def bubble(data):
         for i in range(len(data) - 1):
             if data[i] > data[i + 1]:
                 data[i], data[i + 1] = data[i + 1], data[i]
-                swap([data[i], i], [data[i + 1], 1])
+                #swap([data[i], i], [data[i + 1], 1])
                 swaps += 1
         if swaps == 0:
             sort_completed = True
     
     return data
 
-def swap(element1, element2):
-    # for i in range(2):
-    #     update
+def swap(rects, speed):
+    for rect in rects:
+        update(rect, 1, speed, 300)
+    
     return
 
 def update(obj, moveDir, speed, limit):
@@ -48,10 +49,9 @@ def update(obj, moveDir, speed, limit):
             window.after(round((1 / speed) * 10), lambda obj = obj: update(obj, moveDir, speed, limit))
     
     if moveDir == 1:
-        print(canvas.coords(obj), limit)
-        if canvas.coords(obj)[1] - 5 < limit:
-            canvas.move(obj, 0, -(canvas.coords(obj)[1] - limit))
-        elif canvas.coords(obj)[1] != limit:
+        if canvas.coords(obj)[3] - 5 < limit:
+            canvas.move(obj, 0, -(canvas.coords(obj)[3] - limit))
+        elif canvas.coords(obj)[3] != limit:
             canvas.move(obj, 0, -5)
             window.after(round((1 / speed) * 10), lambda obj = obj: update(obj, moveDir, speed, limit))
 
@@ -96,7 +96,7 @@ print(posCoords)
 
 moveMode = 2
 rect = 5
-y = tk.Button(window, command=lambda obj = rect, mode = moveMode, speed = speed: update(obj, mode, speed, 800))
+y = tk.Button(window, command=lambda obj = rect, mode = moveMode, speed = speed: swap([3, 5], speed))
 bubble(data)
 y.grid(row=1, column=0, sticky="nesw")
 window.mainloop()
