@@ -8,7 +8,7 @@ window.columnconfigure(0, weight=1, uniform="a")
 window.rowconfigure(0, weight=4, uniform="a")
 window.rowconfigure(1, weight=1, uniform="a")
 
-speed = 3
+speed = 5
 data = [2, 4, 8, 5, 1, 2, 4, 8, 5, 1]
 MAXSCREENWIDTH = 1300
 MAXSCREENHEIGHT = 500
@@ -20,55 +20,74 @@ posCoords = []
 canvas = tk.Canvas(window, bg='light grey')
 canvas.grid(row=0, column=0, sticky="nesw")
 
-def bubble(data):
+def bubble(data, speed, swaps, index):
     sort_completed = False
     while sort_completed == False:
-        swaps = 0
-        for i in range(len(data) - 1):
-            if data[i] > data[i + 1]:
-                data[i], data[i + 1] = data[i + 1], data[i]
-                #swap([data[i], i], [data[i + 1], 1])
+        while index <= len(data) - 1:
+            if data[index] > data[index + 1]:
+                swap([index + 1, index + 2], speed, data, swaps, index)
+                data[index], data[index + 1] = data[index + 1], data[index]
                 swaps += 1
+            index += 1
         if swaps == 0:
             sort_completed = True
     
     return data
 
-def swap(rects, speed):
-    for rect in rects:
-        update(rect, 1, speed, 300)
-    
-    return
+def swap(rects, speed, data, swaps, index):
+    global swapStage
+    swapStages = [[1, 100], [1, 100], [2, canvas.coords(rects[1])[2]], [0, canvas.coords(rects[0])[0]], [3, MAXSCREENHEIGHT], [3, MAXSCREENHEIGHT]]
 
-def update(obj, moveDir, speed, limit):
-    if moveDir == 0:
+    if swapStage == 6:
+        bubble(data, speed, swaps, index)
+    else:
+        for i in range(2):
+            update(rects[i], rects, swapStages[swapStage][0], speed, swapStages[swapStage][1], True if i == 0 else False, data, swaps, index)
+            swapStage += 1
+
+def update(obj, rects, moveDir, speed, limit, callable, data, swaps, index):
+    global swapStage
+    if moveDir == 0: #left
         if canvas.coords(obj)[0] - 5 < limit:
             canvas.move(obj, -(canvas.coords(obj)[0] - limit), 0)
+            if callable:
+                swap(rects, speed, data, swaps, index)
+
         elif canvas.coords(obj)[0] != limit:
             canvas.move(obj, -5, 0)
-            window.after(round((1 / speed) * 10), lambda obj = obj: update(obj, moveDir, speed, limit))
+            canvas.after(round((1 / speed) * 10), update, obj, rects, moveDir, speed, limit, callable, data, swaps, index)
     
-    if moveDir == 1:
+    if moveDir == 1: #up
         if canvas.coords(obj)[3] - 5 < limit:
             canvas.move(obj, 0, -(canvas.coords(obj)[3] - limit))
+            if callable:
+                swap(rects, speed, data, swaps, index)
+
         elif canvas.coords(obj)[3] != limit:
             canvas.move(obj, 0, -5)
-            window.after(round((1 / speed) * 10), lambda obj = obj: update(obj, moveDir, speed, limit))
+            canvas.after(round((1 / speed) * 10), update, obj, rects, moveDir, speed, limit, callable, data, swaps, index)
 
-    if moveDir == 2:
+    if moveDir == 2: #right
         if canvas.coords(obj)[2] + 5 > limit:
             canvas.move(obj, canvas.coords(obj)[2] - limit, 0)
+            if callable:
+                swap(rects, speed, data, swaps, index)
+
         elif canvas.coords(obj)[2] != limit:
             canvas.move(obj, 5, 0)
-            window.after(round((1 / speed) * 10), lambda obj = obj: update(obj, moveDir, speed, limit))
+            canvas.after(round((1 / speed) * 10), update, obj, rects, moveDir, speed, limit, callable, data, swaps, index)
 
-    if moveDir == 3:
+    if moveDir == 3: #down
         if canvas.coords(obj)[3] + 5 > limit:
             canvas.move(obj, 0, canvas.coords(obj)[3] - limit)
+            if callable:
+                swap(rects, speed, data, swaps, index)
+
         elif canvas.coords(obj)[3] != limit:
             canvas.move(obj, 0, 5)
-            window.after(round((1 / speed) * 10), lambda obj = obj: update(obj, moveDir, speed, limit))
+            canvas.after(round((1 / speed) * 10), update, obj, rects, moveDir, speed, limit, callable, data, swaps, index)
 
+swapStage = 0
 
 barWidth = math.floor((MAXSCREENWIDTH - (padX*2)) / ((len(data) * 2) - 1))
 if barWidth > 100:
@@ -94,9 +113,6 @@ print(canvas.coords(5))
 
 print(posCoords)
 
-moveMode = 2
-rect = 5
-y = tk.Button(window, command=lambda obj = rect, mode = moveMode, speed = speed: swap([3, 5], speed))
-bubble(data)
+y = tk.Button(window, command=lambda speed = speed: bubble(data, speed, 0, 0))
 y.grid(row=1, column=0, sticky="nesw")
 window.mainloop()
