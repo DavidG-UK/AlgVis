@@ -48,7 +48,7 @@ def initialiseHome():
 
     algorithmButton = tk.Button(window, text="Algorithms", background="light blue", font=("Calibri", 14, "bold"), command=initialiseAlgSelect)
     optionsButton = tk.Button(window, text="Options", background="light blue", font=("Calibri", 14, "bold"), command=initialiseOptions)
-    tutorialButton = tk.Button(window, text="Tutorial", background="light blue", font=("Calibri", 14, "bold"), command=lambda tutStage = tutStage: initialiseTutorial(tutStage))
+    tutorialButton = tk.Button(window, text="Tutorial", background="light blue", font=("Calibri", 14, "bold"), command=lambda tutStage = tutStage: displayTutorial(tutStage))
     titleLabel = ttk.Label(window, text="ALGVIS", background="black", anchor="center", font=("Calibri", 30, "bold"), foreground="light blue")
     welcomeLabel = ttk.Label(window, text="Welcome to Algvis! here you can visualise many common algorithms", background="black", anchor="center", font=("Calibri", 15, "bold"), foreground="light blue")
 
@@ -84,7 +84,7 @@ def initialiseOptions():
         options[i][2] = optionButton
         optionButton.grid(row=(i*2)+1, column=2, sticky="nesw")
 
-def initialiseTutorial(stage):
+def displayTutorial(stage):
     clearScreen(True)
     
     labelText = ["To enter the visualisation screen, click algorithms and then the algorithm you wish to visualise",
@@ -103,8 +103,8 @@ def initialiseTutorial(stage):
     displayBack("home", "nw")
     expLabel = ttk.Label(window, text=labelText[stage], background="light blue", anchor="center", font=("Calibri", 18, "bold"), foreground="black")
     expLabel.grid(row=2, column=1, sticky="nesw", columnspan=2)
-    forward = tk.Button(window, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda stage = stage: initialiseTutorial(stage + 1) if stage < len(labelText) - 1 else initialiseHome())
-    backward = tk.Button(window, text="⏴", background="white", font=("Calibri", 14, "bold"), command=lambda stage = stage: initialiseTutorial(stage - 1) if stage > 0 else None)
+    forward = tk.Button(window, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda stage = stage: displayTutorial(stage + 1) if stage < len(labelText) - 1 else initialiseHome())
+    backward = tk.Button(window, text="⏴", background="white", font=("Calibri", 14, "bold"), command=lambda stage = stage: displayTutorial(stage - 1) if stage > 0 else None)
     backward.grid(row=1, column=1, sticky="nesw")
     forward.grid(row=1, column=2, sticky="nesw")
     tutFrame = ttk.Frame(window)
@@ -180,7 +180,7 @@ def initialiseAlgSelect():
     displayBack("home", "nw")
 
     for i in range(len(algorithms)):
-        algButtons.append(tk.Button(window, text=algorithms[i][0], background="black", foreground="white", font=("Calibri", 14, "bold"), command=lambda idx=i: displayAlgInfo(idx)))
+        algButtons.append(tk.Button(window, text=algorithms[i][0], background="light blue", foreground="black", font=("Calibri", 14, "bold"), command=lambda idx=i: displayAlgInfo(idx)))
         algButtons[i].grid(row=i+1, column=0, sticky="nesw")
 
 def initialiseVisualisation(algidx):
@@ -234,8 +234,6 @@ def initialiseVisualisation(algidx):
         onDescLabel = ttk.Label(window, text=algorithms[algidx][3], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
         onDescLabel.grid(row=3, column=0, columnspan=2, sticky="nesw")
 
-    print(algData)
-
 def displayBack(backScreen, xyAlignment):
     if backScreen == "home":
         backButton = tk.Button(window, text="back", background="white", font=("Calibri", 14, "bold"), command=initialiseHome)
@@ -262,10 +260,10 @@ def createTaskbar(active, algidx, master):
     inputFrame.columnconfigure((0, 2), weight=1, uniform="e")
     inputFrame.rowconfigure(0, weight=1, uniform="e")
 
-    inputVar = tk.StringVar()
-    entryBox = ttk.Entry(inputFrame, textvariable=inputVar)
-    randomButton = tk.Button(inputFrame, text="Random", background="white", font=("Calibri", 14, "bold"), command=generateRandomData if active == True else None)
-    inputButton = tk.Button(inputFrame, text="Enter", background="white", font=("Calibri", 14, "bold"), command=lambda input = inputVar: submitAlgData(input) if active == True else None)
+    dataInput = tk.StringVar()
+    entryBox = ttk.Entry(inputFrame, textvariable=dataInput)
+    randomButton = tk.Button(inputFrame, text="Random", background="white", font=("Calibri", 14, "bold"), command=lambda input = None, mode = 0: submitAlgData(input, mode) if active == True else None)
+    inputButton = tk.Button(inputFrame, text="Enter", background="white", font=("Calibri", 14, "bold"), command=lambda input = dataInput, mode = 1: submitAlgData(input, mode) if active == True else None)
 
     inputButton.grid(row=0, column=0, sticky="nesw")
     entryBox.grid(row=0, column=1, sticky="nesw")
@@ -276,21 +274,20 @@ def createTaskbar(active, algidx, master):
     inputFrame.grid(row=0, column=2, sticky="nesw")
     return taskFrame
 
-def submitAlgData(userInput):
-    global algData
-    userInput = userInput.get()
-    algData = list(map(int, userInput.split(" ")))
-
-def generateRandomData():
-    global algData
+def submitAlgData(userInput, mode):
     algData = []
-    for i in range(5):
-        algData.append(random.randint(1, 25))
+    if mode == 1:
+        userInput = userInput.get()
+        algData = list(map(int, userInput.split(" ")))
+    elif mode == 2:
+        for _ in range(5):
+            algData.append(random.randint(1, 25))
+    #todo
 
 def displayAlgInfo(algidx):
     titleLabel = ttk.Label(window, text=algorithms[algidx][0], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
     descLabel = ttk.Label(window, text=algorithms[algidx][1], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
-    visualiseButton = tk.Button(window, text="visualise!", background="green", font=("Calibri", 20, "bold"), command=lambda idx=algidx: initialiseVisualisation(idx))
+    visualiseButton = tk.Button(window, text="visualise!", background="light green", font=("Calibri", 20, "bold"), command=lambda idx=algidx: initialiseVisualisation(idx))
 
     titleLabel.grid(row=1, column=1, sticky="nesw")
     descLabel.grid(row=2, column=1, sticky="nesw", rowspan=window.grid_size()[1] - 4)

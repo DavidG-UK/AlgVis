@@ -170,7 +170,7 @@ def generateMatrix(n):
     for i in range(n):
         adjList = []
         for j in range(n):
-            if random.randint(1, 5) == 3:
+            if random.randint(1, 5) == 1:
                 adjList.append(random.randint(1, 100))
             else:
                 adjList.append(0)
@@ -195,9 +195,9 @@ def Astar(adjMatrix, root, goal):
         nodeTable.append([2**50, 0, False, None]) # distance from start, h(x), visited, previous node
     nodeTable[root][0], nodeTable[root][3] = 0, 0
 
-    dijkTable = dijkstra(adjMatrix, goal, root)[1]
-    for i in range(len(dijkTable)):
-        nodeTable[i][1] = math.floor(dijkTable[i][0] / 10) * 10
+    heurTable = dijkstra(adjMatrix, goal, root)[1]
+    for i in range(len(heurTable)):
+        nodeTable[i][1] = math.floor(heurTable[i][0] / 10) * 10
 
     while nodeTable[goal][2] == False and currentNode != -1:
         for i in range(len(adjMatrix[currentNode])):
@@ -236,9 +236,9 @@ def greedyBFS(adjMatrix, root, goal):
         nodeTable.append([2**50, 0, False, None]) # distance from start, h(x), visited, previous node
     nodeTable[root][0], nodeTable[root][3] = 0, 0
 
-    dijkTable = dijkstra(adjMatrix, goal, root)[1]
-    for i in range(len(dijkTable)):
-        nodeTable[i][1] = math.floor(dijkTable[i][0] / 10) * 10
+    heurTable = dijkstra(adjMatrix, goal, root)[1]
+    for i in range(len(heurTable)):
+        nodeTable[i][1] = math.floor(heurTable[i][0] / 10) * 10
 
     while nodeTable[goal][2] == False and currentNode != -1:
         for i in range(len(adjMatrix[currentNode])):

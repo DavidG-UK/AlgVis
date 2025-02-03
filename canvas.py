@@ -9,7 +9,7 @@ window.rowconfigure(0, weight=4, uniform="a")
 window.rowconfigure(1, weight=1, uniform="a")
 
 speed = 5
-data = [2, 4, 8, 5, 1, 2, 4, 8, 5, 1]
+data = [4, 5, 6, 2, 1]
 MAXSCREENWIDTH = 1300
 MAXSCREENHEIGHT = 500
 padX = 100 / 2
@@ -104,7 +104,7 @@ for i in range(len(data)):
     y = MAXSCREENHEIGHT - MAXBARHEIGHT * (data[i] / largestElement)
     xWid = padX + ((2*i)+1)*barWidth 
     yWid = MAXSCREENHEIGHT
-    rect = canvas.create_rectangle(x, y, xWid, yWid)
+    rect = canvas.create_rectangle(int(x), int(y), int(xWid), int(yWid))
     rectIdData.append(rect)
     posCoords.append([x, y, xWid, yWid])
 

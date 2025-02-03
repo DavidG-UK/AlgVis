@@ -5,8 +5,8 @@ import Algorithms
 
 linesExecuted = 0
 
-def trace_lines(frame, event, arg):
-    global current_line, linesExecuted
+def traceLines(frame, event, arg):
+    global linesExecuted
     if event == 'line':
         linesExecuted += 1
         lineno = frame.f_lineno
@@ -14,8 +14,8 @@ def trace_lines(frame, event, arg):
         with open(filename) as f:
             current_line = f.readlines()[lineno - 1].strip()
             print(f"Executing line {lineno}: {current_line}")
-        time.sleep(1)
-    return trace_lines
+        time.sleep(0.25)
+    return traceLines
 
 def estimate_On(numLines, dataInput):
     elementCount = dataInput
@@ -36,13 +36,13 @@ def estimate_On(numLines, dataInput):
 N = 5
 adjMatrix = Algorithms.generateMatrix(N)
 
-sys.settrace(trace_lines)
+sys.settrace(traceLines)
 goalpath, nodetable = Algorithms.Astar(adjMatrix, 0, N - 1)
 sys.settrace(None)
 print(linesExecuted)
 
 linesExecuted = 0
-sys.settrace(trace_lines)
-goalpath, nodetable = Algorithms.greedyBFS(adjMatrix, 0, N - 1)
+sys.settrace(traceLines)
+goalpath, nodetable = Algorithms.dijkstra(adjMatrix, 0, N - 1)
 sys.settrace(None)
 print(linesExecuted)
