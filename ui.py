@@ -10,8 +10,8 @@ algData = []
 tutButtons = [None, None, None]
 tutStage = 0
 
-options = [["Live Code Display", True, None], ["O(n)", True, None], ["O(n) description", True, None]]
-algorithms = [["Linear Search", "placeholder text", "O(n)", "placeholder text"], 
+options = [["Live Code Display", True, None], ["O(n)", True, None], ["O(n) description", True, None]] #name, enabled, button
+ALGORITHMS = [["Linear Search", "placeholder text", "O(n)", "placeholder text"], #name, desc, O(n), O(n) desc
               ["Binary Search", "placeholder text", "O(log(n))", "placeholder text"], 
               ["Bubble Sort", "placeholder text", "O(n²)", "placeholder text"], 
               ["Insertion Sort", "placeholder text", "O(n²)", "placeholder text"], 
@@ -92,6 +92,7 @@ def displayTutorial(stage):
                  "To change the speed and data used in the algorithm, you can edit the taskbar as shown", 
                  "To view the algorithm you selected, click the play button and watch the visualisation",
                  "You can also view some additional information beneath the visualisation plane. You can \nturn these displays on or off in the options menu",
+                 "graph",
                  "good luck and have fun!"]
 
     window.columnconfigure((0, 3), weight=1, uniform="f")
@@ -156,7 +157,7 @@ def displayTutorial(stage):
     if stage == 4:
         pass
         # do when visualisation is complete
-    if stage == 5:
+    if stage == 6:
         tutFrame.rowconfigure(0, weight=1, uniform="l")
         tutFrame.columnconfigure(0, weight=1, uniform="l")
         smileLabel = ttk.Label(tutFrame, text=":D", background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
@@ -174,13 +175,13 @@ def initialiseAlgSelect():
     window.columnconfigure((0, 1), weight=1, uniform="c")
 
     window.rowconfigure(0, weight=2, uniform="c")
-    for i in range(1, len(algorithms) + 1):
+    for i in range(1, len(ALGORITHMS) + 1):
         window.rowconfigure(i, weight=3, uniform="c")
     
     displayBack("home", "nw")
 
-    for i in range(len(algorithms)):
-        algButtons.append(tk.Button(window, text=algorithms[i][0], background="light blue", foreground="black", font=("Calibri", 14, "bold"), command=lambda idx=i: displayAlgInfo(idx)))
+    for i in range(len(ALGORITHMS)):
+        algButtons.append(tk.Button(window, text=ALGORITHMS[i][0], background="light blue", foreground="black", font=("Calibri", 14, "bold"), command=lambda idx=i: displayAlgInfo(idx)))
         algButtons[i].grid(row=i+1, column=0, sticky="nesw")
 
 def initialiseVisualisation(algidx):
@@ -227,11 +228,11 @@ def initialiseVisualisation(algidx):
         codeFrame.grid(row=2, column=3, rowspan=2, sticky="nesw")
 
     if options[1][1] == True:
-        onLabel = ttk.Label(window, text=algorithms[algidx][2], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+        onLabel = ttk.Label(window, text=ALGORITHMS[algidx][2], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
         onLabel.grid(row=2, column=0, rowspan=2 if options[2][1] == False else 1, columnspan=2, sticky="nesw")
 
     if options[2][1] == True:
-        onDescLabel = ttk.Label(window, text=algorithms[algidx][3], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+        onDescLabel = ttk.Label(window, text=ALGORITHMS[algidx][3], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
         onDescLabel.grid(row=3, column=0, columnspan=2, sticky="nesw")
 
 def displayBack(backScreen, xyAlignment):
@@ -263,6 +264,7 @@ def createTaskbar(active, algidx, master):
     dataInput = tk.StringVar()
     entryBox = ttk.Entry(inputFrame, textvariable=dataInput)
     randomButton = tk.Button(inputFrame, text="Random", background="white", font=("Calibri", 14, "bold"), command=lambda input = None, mode = 0: submitAlgData(input, mode) if active == True else None)
+    #randomElementCount
     inputButton = tk.Button(inputFrame, text="Enter", background="white", font=("Calibri", 14, "bold"), command=lambda input = dataInput, mode = 1: submitAlgData(input, mode) if active == True else None)
 
     inputButton.grid(row=0, column=0, sticky="nesw")
@@ -285,8 +287,8 @@ def submitAlgData(userInput, mode):
     #todo
 
 def displayAlgInfo(algidx):
-    titleLabel = ttk.Label(window, text=algorithms[algidx][0], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
-    descLabel = ttk.Label(window, text=algorithms[algidx][1], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+    titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+    descLabel = ttk.Label(window, text=ALGORITHMS[algidx][1], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
     visualiseButton = tk.Button(window, text="visualise!", background="light green", font=("Calibri", 20, "bold"), command=lambda idx=algidx: initialiseVisualisation(idx))
 
     titleLabel.grid(row=1, column=1, sticky="nesw")

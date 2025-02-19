@@ -12,9 +12,9 @@ def traceLines(frame, event, arg):
         lineno = frame.f_lineno
         filename = frame.f_globals["__file__"]
         with open(filename) as f:
-            current_line = f.readlines()[lineno - 1].strip()
-            print(f"Executing line {lineno}: {current_line}")
-        time.sleep(0.25)
+            currentLine = f.readlines()[lineno - 1].strip()
+            print(f"Executing line {lineno}: {currentLine}")
+        time.sleep(0.5)
     return traceLines
 
 def estimate_On(numLines, dataInput):
