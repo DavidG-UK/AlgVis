@@ -71,17 +71,20 @@ def insertion(data):
     return data
 
 def bubble(data):
+    swapList = []
     sort_completed = False
     while sort_completed == False:
         swaps = 0
         for i in range(len(data) - 1):
             if data[i] > data[i + 1]:
-                data[i], data[i + 1] = data[i + 1], data[i]
+                swapList.append([i, i + 1])
                 swaps += 1
+                data[i], data[i + 1] = data[i + 1], data[i]
+
         if swaps == 0:
             sort_completed = True
     
-    return data
+    return swapList
 
 def quick(data):
     if len(data) < 2:
@@ -170,7 +173,7 @@ def generateMatrix(n):
     for i in range(n):
         adjList = []
         for j in range(n):
-            if random.randint(1, 5) == 1:
+            if random.randint(1, 3) == 1:
                 adjList.append(random.randint(1, 100))
             else:
                 adjList.append(0)

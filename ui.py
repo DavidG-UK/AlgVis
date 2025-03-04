@@ -1,14 +1,22 @@
 import random
+import math
+import Algorithms
 import tkinter as tk
 from tkinter import ttk
+from tkinter import simpledialog
+from tkinter import messagebox
 
 window = tk.Tk()
 window.geometry('1300x768')
 window.configure(background="black")
-currentScreen = ""
-algData = []
+algData = [5, 3, 4, 1, 6, 8, 4, 5]
 tutButtons = [None, None, None]
-tutStage = 0
+
+afterTasks = []
+MAXSCREENWIDTH = 1300
+MAXSCREENHEIGHT = 400
+MAXBARWIDTH = 100
+MAXBARHEIGHT = 200
 
 options = [["Live Code Display", True, None], ["O(n)", True, None], ["O(n) description", True, None]] #name, enabled, button
 ALGORITHMS = [["Linear Search", "placeholder text", "O(n)", "placeholder text"], #name, desc, O(n), O(n) desc
@@ -33,9 +41,7 @@ def clearScreen(gridClear):
             window.rowconfigure(i, weight=0)
 
 def initialiseHome():
-    global currentScreen, tutStage
     clearScreen(True)
-    currentScreen = "home"
     
     window.columnconfigure((0, 2), weight=1, uniform="a")
     window.columnconfigure(1, weight=2, uniform="a")
@@ -48,7 +54,7 @@ def initialiseHome():
 
     algorithmButton = tk.Button(window, text="Algorithms", background="light blue", font=("Calibri", 14, "bold"), command=initialiseAlgSelect)
     optionsButton = tk.Button(window, text="Options", background="light blue", font=("Calibri", 14, "bold"), command=initialiseOptions)
-    tutorialButton = tk.Button(window, text="Tutorial", background="light blue", font=("Calibri", 14, "bold"), command=lambda tutStage = tutStage: displayTutorial(tutStage))
+    tutorialButton = tk.Button(window, text="Tutorial", background="light blue", font=("Calibri", 14, "bold"), command=lambda tutStage = 0: displayTutorial(tutStage))
     titleLabel = ttk.Label(window, text="ALGVIS", background="black", anchor="center", font=("Calibri", 30, "bold"), foreground="light blue")
     welcomeLabel = ttk.Label(window, text="Welcome to Algvis! here you can visualise many common algorithms", background="black", anchor="center", font=("Calibri", 15, "bold"), foreground="light blue")
 
@@ -59,10 +65,7 @@ def initialiseHome():
     welcomeLabel.grid(row=1, column=1, sticky="nesw")
 
 def initialiseOptions():
-    global currentScreen
-
     clearScreen(True)
-    currentScreen = "options"
 
     window.columnconfigure(0, weight=2, uniform="b")
     window.columnconfigure(1, weight=3, uniform="b")
@@ -110,14 +113,14 @@ def displayTutorial(stage):
     forward.grid(row=1, column=2, sticky="nesw")
     tutFrame = ttk.Frame(window)
 
-    if stage == 0:   
+    if stage == 0: # menu navigation
         tutFrame.columnconfigure((0, 2), weight=1, uniform="g")
         tutFrame.columnconfigure(1, weight=3, uniform="g")
         tutFrame.rowconfigure((0, 1, 2), weight=1, uniform="g")
         algorithmButton = tk.Button(tutFrame, text="Algorithms", background="light blue", font=("Calibri", 14, "bold"))
         algorithmButton.grid(row=1, column=1, sticky="nesw")
 
-    if stage == 1:
+    if stage == 1: # options tutorial
         tutFrame.columnconfigure(0, weight=2, uniform="h")
         tutFrame.columnconfigure(1, weight=3, uniform="h")
         tutFrame.columnconfigure(2, weight=1, uniform="h")
@@ -136,7 +139,7 @@ def displayTutorial(stage):
             tutButtons[i] = optionButton
             optionButton.grid(row=(i*2)+1, column=2, sticky="nesw")
     
-    if stage == 2:
+    if stage == 2: # taskbar tutorial
         tutFrame.rowconfigure((0, 2), weight=3, uniform="i")
         tutFrame.rowconfigure(1, weight=2, uniform="i")
         tutFrame.columnconfigure((0, 2), weight=1, uniform="i")
@@ -144,7 +147,7 @@ def displayTutorial(stage):
         taskFrame = createTaskbar(False, None, tutFrame)
         taskFrame.grid(row=1, column=1, sticky="nesw")
     
-    if stage == 3:
+    if stage == 3: # visualisation tutorial
         tutFrame.rowconfigure(0, weight=1, uniform="j")
         tutFrame.rowconfigure(1, weight=2, uniform="j")
         tutFrame.rowconfigure(2, weight=4, uniform="j")
@@ -157,7 +160,7 @@ def displayTutorial(stage):
     if stage == 4:
         pass
         # do when visualisation is complete
-    if stage == 6:
+    if stage == 6: # end
         tutFrame.rowconfigure(0, weight=1, uniform="l")
         tutFrame.columnconfigure(0, weight=1, uniform="l")
         smileLabel = ttk.Label(tutFrame, text=":D", background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
@@ -165,10 +168,7 @@ def displayTutorial(stage):
     tutFrame.grid(row=3, column=1, sticky="nesw", columnspan=2)
 
 def initialiseAlgSelect():
-    global currentScreen
-
     clearScreen(True)
-    currentScreen = "algselect"
 
     algButtons = []
 
@@ -185,12 +185,10 @@ def initialiseAlgSelect():
         algButtons[i].grid(row=i+1, column=0, sticky="nesw")
 
 def initialiseVisualisation(algidx):
-    global currentScreen
+    global visCanvas
+    clearScreen(True) # removes all formatting and widgets
 
-    clearScreen(True)
-    currentScreen = "algselect"
-
-    window.columnconfigure(0, weight=1, uniform="d")
+    window.columnconfigure(0, weight=1, uniform="d") 
     window.columnconfigure(1, weight=1, uniform="d")
     window.columnconfigure(2, weight=4, uniform="d")
     window.columnconfigure(3, weight=3, uniform="d")
@@ -200,22 +198,20 @@ def initialiseVisualisation(algidx):
     window.rowconfigure(2, weight=1, uniform="d")
     window.rowconfigure(3, weight=2, uniform="d")
 
-    planeLabel = ttk.Label(window, text="plane", background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
 
-    taskbar = createTaskbar(True, algidx, window)
+    taskbar = createTaskbar(True, algidx, window) # calls function to create taskbar frame
+    visCanvas = tk.Canvas(window, bg='light grey')
+    setupCanvas(algData)
     displayBack("algSelect", "nesw")
     gridFrame = ttk.Frame(window)
     gridFrame.rowconfigure(0, weight=1, uniform="k")
     gridFrame.columnconfigure(0, weight=1, uniform="k")
 
-    #label = ttk.Label(gridFrame, text="e", background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
-    #label.grid(row=0, column=0, sticky="nesw")
     gridFrame.grid(row=2, column=2, sticky="nesw", rowspan=2)
-    planeLabel.grid(row=1, column=0, sticky="nesw", columnspan=4)
     taskbar.grid(row=0, column=1, sticky="nesw", columnspan=3)
-  
+    visCanvas.grid(row=1, column=0, sticky="nesw", columnspan=4)
 
-    if options[0][1] == True:
+    if options[0][1] == True: # display of optional featres
         codeFrame = tk.Frame(window)
         lineLabels = []
         codeFrame.columnconfigure(0, weight=1, uniform="f")
@@ -245,13 +241,13 @@ def displayBack(backScreen, xyAlignment):
 def createTaskbar(active, algidx, master):
     speed = 1
 
-    taskFrame = tk.Frame(master)
+    taskFrame = tk.Frame(master) # frame definition with formatting
     taskFrame.rowconfigure(0, weight=1, uniform="g")
     taskFrame.columnconfigure(0, weight=1, uniform="g")
     taskFrame.columnconfigure(1, weight=4, uniform="g")
     taskFrame.columnconfigure(2, weight=3, uniform="g")
 
-    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx: startAlgorithm(algIdx) if active == True else None)
+    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx, speed = speed, data = algData: startAlgorithm(algIdx, speed, data) if active == True else None) # creating widgets and defining behaviour
     speedScale = tk.Scale(taskFrame, from_=0.1, to=10, orient="horizontal", variable=speed, label="Execution speed", resolution=0.1)
     speedScale.set(speed)
 
@@ -263,11 +259,10 @@ def createTaskbar(active, algidx, master):
 
     dataInput = tk.StringVar()
     entryBox = ttk.Entry(inputFrame, textvariable=dataInput)
-    randomButton = tk.Button(inputFrame, text="Random", background="white", font=("Calibri", 14, "bold"), command=lambda input = None, mode = 0: submitAlgData(input, mode) if active == True else None)
-    #randomElementCount
-    inputButton = tk.Button(inputFrame, text="Enter", background="white", font=("Calibri", 14, "bold"), command=lambda input = dataInput, mode = 1: submitAlgData(input, mode) if active == True else None)
+    randomButton = tk.Button(inputFrame, text="Random", background="white", font=("Calibri", 14, "bold"), command=lambda input = None, mode = 0: validateCount() if active == True else None)
+    inputButton = tk.Button(inputFrame, text="Enter", background="white", font=("Calibri", 14, "bold"), command=lambda input = dataInput, mode = 1: validateData(input) if active == True else None)
 
-    inputButton.grid(row=0, column=0, sticky="nesw")
+    inputButton.grid(row=0, column=0, sticky="nesw") # displaying widgets within frame
     entryBox.grid(row=0, column=1, sticky="nesw")
     randomButton.grid(row=0, column=2, sticky="nesw")
 
@@ -276,15 +271,141 @@ def createTaskbar(active, algidx, master):
     inputFrame.grid(row=0, column=2, sticky="nesw")
     return taskFrame
 
-def submitAlgData(userInput, mode):
-    algData = []
-    if mode == 1:
-        userInput = userInput.get()
-        algData = list(map(int, userInput.split(" ")))
-    elif mode == 2:
-        for _ in range(5):
+def setupCanvas(data):
+    global visCanvas
+
+    padX = 50
+    rectIdData = []
+    posCoords = []
+
+    barWidth = math.floor((MAXSCREENWIDTH - (padX*2)) / ((len(data) * 2) - 1))
+    if barWidth > 100:
+        barWidth = 100
+
+    largestElement = max(data)
+
+    print(barWidth)
+
+    for i in range(len(data)):
+        # x y x+wid y+wid
+        x = padX + 2*i*barWidth
+        y = MAXSCREENHEIGHT - MAXBARHEIGHT * (data[i] / largestElement)
+        xWid = padX + ((2*i)+1)*barWidth 
+        yWid = MAXSCREENHEIGHT
+        rect = visCanvas.create_rectangle(int(x), int(y), int(xWid), int(yWid))
+        rectIdData.append(rect)
+        posCoords.append([x, y, xWid, yWid])
+
+def swap(swapList, speed, swapStage, swapIndex, idOrder):
+    global afterTasks, visCanvas
+
+    for task in afterTasks:
+        window.after_cancel(task)
+    afterTasks = []
+    print("run")
+
+    swapStages = [[1, 100], [1, 100], [2, visCanvas.coords(idOrder[swapList[swapIndex][1]])[2]], [0, visCanvas.coords(idOrder[swapList[swapIndex][0]])[0]], [3, MAXSCREENHEIGHT], [3, MAXSCREENHEIGHT]]
+
+    if swapStage == 6:
+        idOrder[swapList[swapIndex][0]], idOrder[swapList[swapIndex][1]] = idOrder[swapList[swapIndex][1]], idOrder[swapList[swapIndex][0]]
+        swap(swapList, speed, 0, swapIndex + 1, idOrder)
+    else:
+        for i in range(2):
+            update(idOrder[swapList[swapIndex][i]], swapStages[swapStage][0], swapStages[swapStage][1], speed, swapStage, idOrder, swapList, swapIndex)
+            swapStage += 1
+
+def update(obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex):
+    global afterTasks, visCanvas
+    if moveDir == 0: #left
+        if visCanvas.coords(obj)[0] - 5 <= limit:
+            visCanvas.move(obj, -(visCanvas.coords(obj)[0] - limit), 0)
+            if swapStage % 2 == 0:
+                swap(swapList, speed, swapStage + 2, swapIndex, idOrder)
+
+        elif visCanvas.coords(obj)[0] != limit:
+            visCanvas.move(obj, -5, 0)
+            afterTasks.append(visCanvas.after(round((1 / speed) * 10), update, obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex))
+    
+    if moveDir == 1: #up
+        if obj == 5 and swapIndex == 6:
+            print(1)
+        print(obj, visCanvas.coords(obj)[3], swapStage)
+        if visCanvas.coords(obj)[3] - 5 <= limit:
+            visCanvas.move(obj, 0, -(visCanvas.coords(obj)[3] - limit))
+            if swapStage % 2 == 0:
+                swap(swapList, speed, swapStage + 2, swapIndex, idOrder)
+
+        elif visCanvas.coords(obj)[3] != limit:
+            visCanvas.move(obj, 0, -5)
+            afterTasks.append(visCanvas.after(round((1 / speed) * 10), update, obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex))
+
+    if moveDir == 2: #right
+        if visCanvas.coords(obj)[2] + 5 >= limit:
+            visCanvas.move(obj, visCanvas.coords(obj)[2] - limit, 0)
+            if swapStage % 2 == 0:
+                swap(swapList, speed, swapStage + 2, swapIndex, idOrder)
+
+        elif visCanvas.coords(obj)[2] != limit:
+            visCanvas.move(obj, 5, 0)
+            afterTasks.append(visCanvas.after(round((1 / speed) * 10), update, obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex))
+
+    if moveDir == 3: #down
+        if obj == 5 and swapIndex == 6:
+            print(1)
+        if visCanvas.coords(obj)[3] + 5 >= limit:
+            visCanvas.move(obj, 0, visCanvas.coords(obj)[3] - limit)
+            if swapStage % 2 == 0:
+                swap(swapList, speed, swapStage + 2, swapIndex, idOrder)
+
+        elif visCanvas.coords(obj)[3] != limit:
+            visCanvas.move(obj, 0, 5)
+            afterTasks.append(visCanvas.after(round((1 / speed) * 10), update, obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex))
+
+def validateCount():
+    valid = True
+    count = simpledialog.askstring("tk", "How many random elements should be generated")
+
+    if count == None:
+        return
+    
+    try:
+        count = int(count)
+    except:
+        messagebox.showwarning(message="Please enter a single integer")
+        return
+
+    if count < 1 or count > 50:
+        valid = False
+        messagebox.showwarning(message="Please enter a number between 1 and 50")
+    
+    if valid == True:
+        algData = []
+        visCanvas.delete("all")
+        for _ in range(count):
             algData.append(random.randint(1, 25))
-    #todo
+
+        setupCanvas(algData)
+
+def validateData(userInput):
+    userInput = userInput.get()
+    data = None
+    try:
+        data = list(map(int, userInput.split(" ")))
+    except:
+        try:
+            data = list(map(int, userInput.split(", ")))
+            messagebox.showwarning(message="In future, please enter data in the form 'x y z'")
+        except:
+            try:
+                data = list(map(int, userInput.split(",")))
+                messagebox.showwarning(message="In future, please enter data in the form 'x y z'")
+            except:
+                messagebox.showwarning(message="entered data could not be read. please enter data in the form 'x y z'")
+    
+    if data != None:
+        algData = data  
+        visCanvas.delete("all")
+        setupCanvas(algData)
 
 def displayAlgInfo(algidx):
     titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
@@ -309,8 +430,9 @@ def updateTutButton(bIdx):
     else:
         tutButtons[bIdx].config(background="red")
 
-def startAlgorithm(algIdx):
-    pass
+def startAlgorithm(algIdx, speed, data):
+    swapList = Algorithms.bubble(data)
+    swap(swapList, speed, 0, 0, [1, 2, 3, 4, 5])
 
 initialiseHome()
 window.mainloop()
