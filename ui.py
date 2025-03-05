@@ -9,7 +9,7 @@ from tkinter import messagebox
 window = tk.Tk()
 window.geometry('1300x768')
 window.configure(background="black")
-algData = [5, 3, 4, 1, 6, 8, 4, 5]
+algData = [5, 3, 4, 5]
 tutButtons = [None, None, None]
 
 afterTasks = []
