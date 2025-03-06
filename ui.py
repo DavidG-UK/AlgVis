@@ -9,7 +9,7 @@ from tkinter import messagebox
 window = tk.Tk()
 window.geometry('1300x768')
 window.configure(background="black")
-algData = [5, 3, 4, 5]
+algData = [5, 3, 4, 5, 10, 8, 4, 2]
 tutButtons = [None, None, None]
 
 afterTasks = []
@@ -198,7 +198,6 @@ def initialiseVisualisation(algidx):
     window.rowconfigure(2, weight=1, uniform="d")
     window.rowconfigure(3, weight=2, uniform="d")
 
-
     taskbar = createTaskbar(True, algidx, window) # calls function to create taskbar frame
     visCanvas = tk.Canvas(window, bg='light grey')
     setupCanvas(algData)
@@ -240,16 +239,16 @@ def displayBack(backScreen, xyAlignment):
 
 def createTaskbar(active, algidx, master):
     speed = 1
-
     taskFrame = tk.Frame(master) # frame definition with formatting
     taskFrame.rowconfigure(0, weight=1, uniform="g")
     taskFrame.columnconfigure(0, weight=1, uniform="g")
     taskFrame.columnconfigure(1, weight=4, uniform="g")
     taskFrame.columnconfigure(2, weight=3, uniform="g")
 
-    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx, speed = speed, data = algData: startAlgorithm(algIdx, speed, data) if active == True else None) # creating widgets and defining behaviour
     speedScale = tk.Scale(taskFrame, from_=0.1, to=10, orient="horizontal", variable=speed, label="Execution speed", resolution=0.1)
     speedScale.set(speed)
+
+    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx, speed = speed, data = algData: startAlgorithm(algIdx, speed, data) if active == True else None) # creating widgets and defining behaviour
 
     inputFrame = tk.Frame(taskFrame)
 
@@ -284,8 +283,6 @@ def setupCanvas(data):
 
     largestElement = max(data)
 
-    print(barWidth)
-
     for i in range(len(data)):
         # x y x+wid y+wid
         x = padX + 2*i*barWidth
@@ -296,70 +293,86 @@ def setupCanvas(data):
         rectIdData.append(rect)
         posCoords.append([x, y, xWid, yWid])
 
-def swap(swapList, speed, swapStage, swapIndex, idOrder):
-    global afterTasks, visCanvas
+def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseComplete, speed):
+    global visCanvas
+    timePause = int((1/speed)*14)
+    if timePause == 0:
+        timePause = 1
 
-    for task in afterTasks:
-        window.after_cancel(task)
-    afterTasks = []
-    print("run")
+    visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='light blue')
+    visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='light blue')
 
-    swapStages = [[1, 100], [1, 100], [2, visCanvas.coords(idOrder[swapList[swapIndex][1]])[2]], [0, visCanvas.coords(idOrder[swapList[swapIndex][0]])[0]], [3, MAXSCREENHEIGHT], [3, MAXSCREENHEIGHT]]
-
-    if swapStage == 6:
-        idOrder[swapList[swapIndex][0]], idOrder[swapList[swapIndex][1]] = idOrder[swapList[swapIndex][1]], idOrder[swapList[swapIndex][0]]
-        swap(swapList, speed, 0, swapIndex + 1, idOrder)
+    if index < len(aPositions):
+        bars = [idOrder[swapList[swapIndex][1]], idOrder[swapList[swapIndex][0]]] 
+        visCanvas.move(bars[0], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
+        visCanvas.move(bars[1], aPositions[index][0] - visCanvas.coords(bars[1])[0], aPositions[index][1] - visCanvas.coords(bars[1])[3])
+        index += 1
+        visCanvas.after(timePause, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, False, speed)
     else:
-        for i in range(2):
-            update(idOrder[swapList[swapIndex][i]], swapStages[swapStage][0], swapStages[swapStage][1], speed, swapStage, idOrder, swapList, swapIndex)
-            swapStage += 1
+        if not pauseComplete:
+            visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, True, speed)
+        else:
+            visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='')
+            visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='')
+            swapIndex += 1
+            if swapIndex < len(swapList):
+                bPositions, aPositions, idOrder = createStages(swapList, swapIndex, idOrder)
+                visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, bPositions, aPositions, idOrder, False, speed)
+            else:
+                for obj in idOrder:
+                    visCanvas.itemconfig(obj, fill="light green")
 
-def update(obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex):
-    global afterTasks, visCanvas
-    if moveDir == 0: #left
-        if visCanvas.coords(obj)[0] - 5 <= limit:
-            visCanvas.move(obj, -(visCanvas.coords(obj)[0] - limit), 0)
-            if swapStage % 2 == 0:
-                swap(swapList, speed, swapStage + 2, swapIndex, idOrder)
+def createStages(swapList, swapIndex, idOrder):
+    global visCanvas
+    aStages = []
+    bStages = []
 
-        elif visCanvas.coords(obj)[0] != limit:
-            visCanvas.move(obj, -5, 0)
-            afterTasks.append(visCanvas.after(round((1 / speed) * 10), update, obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex))
+    swapStages = [[1, 100], [1, 100], [2, visCanvas.coords(idOrder[swapList[swapIndex][1]])[0]], [0, visCanvas.coords(idOrder[swapList[swapIndex][0]])[0]], [3, MAXSCREENHEIGHT], [3, MAXSCREENHEIGHT]]
     
-    if moveDir == 1: #up
-        if obj == 5 and swapIndex == 6:
-            print(1)
-        print(obj, visCanvas.coords(obj)[3], swapStage)
-        if visCanvas.coords(obj)[3] - 5 <= limit:
-            visCanvas.move(obj, 0, -(visCanvas.coords(obj)[3] - limit))
-            if swapStage % 2 == 0:
-                swap(swapList, speed, swapStage + 2, swapIndex, idOrder)
+    bars = [[visCanvas.coords(idOrder[swapList[swapIndex][0]])[0], visCanvas.coords(idOrder[swapList[swapIndex][0]])[3]], [visCanvas.coords(idOrder[swapList[swapIndex][1]])[0], visCanvas.coords(idOrder[swapList[swapIndex][1]])[3]]]
 
-        elif visCanvas.coords(obj)[3] != limit:
-            visCanvas.move(obj, 0, -5)
-            afterTasks.append(visCanvas.after(round((1 / speed) * 10), update, obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex))
+    for i in range(len(swapStages)):
+        limit = swapStages[i][1]
+        odd = 1 if i % 2 == 1 else 0
 
-    if moveDir == 2: #right
-        if visCanvas.coords(obj)[2] + 5 >= limit:
-            visCanvas.move(obj, visCanvas.coords(obj)[2] - limit, 0)
-            if swapStage % 2 == 0:
-                swap(swapList, speed, swapStage + 2, swapIndex, idOrder)
+        if i != 2 and i != 3:
+            while bars[odd][1] != limit :
+                if swapStages[i][0] == 1:
+                    if bars[odd][1] - 5 <= limit:
+                        bars[odd][1] = limit
+                        aStages.append([bars[odd][0], bars[odd][1]]) if odd == 0 else bStages.append([bars[odd][0], bars[odd][1]])
+                    elif bars[odd][1] != limit:
+                        bars[odd][1] -= 5
+                        aStages.append([bars[odd][0], bars[odd][1]]) if odd == 0 else bStages.append([bars[odd][0], bars[odd][1]])
 
-        elif visCanvas.coords(obj)[2] != limit:
-            visCanvas.move(obj, 5, 0)
-            afterTasks.append(visCanvas.after(round((1 / speed) * 10), update, obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex))
+                if swapStages[i][0] == 3:
+                    if bars[odd][1] + 5 >= limit:
+                        bars[odd][1] = limit
+                        aStages.append([bars[odd][0], bars[odd][1]]) if odd == 0 else bStages.append([bars[odd][0], bars[odd][1]])
+                    elif bars[odd][1] != limit:
+                        bars[odd][1] += 5
+                        aStages.append([bars[odd][0], bars[odd][1]]) if odd == 0 else bStages.append([bars[odd][0], bars[odd][1]])
 
-    if moveDir == 3: #down
-        if obj == 5 and swapIndex == 6:
-            print(1)
-        if visCanvas.coords(obj)[3] + 5 >= limit:
-            visCanvas.move(obj, 0, visCanvas.coords(obj)[3] - limit)
-            if swapStage % 2 == 0:
-                swap(swapList, speed, swapStage + 2, swapIndex, idOrder)
+        else:
+            while bars[odd][0] != limit:
+                if swapStages[i][0] == 0:
+                    if bars[odd][0] - 5 <= limit:
+                        bars[odd][0] = limit
+                        aStages.append([bars[odd][0], bars[odd][1]]) if odd == 0 else bStages.append([bars[odd][0], bars[odd][1]])
+                    elif bars[odd][0] != limit:
+                        bars[odd][0] -= 5
+                        aStages.append([bars[odd][0], bars[odd][1]]) if odd == 0 else bStages.append([bars[odd][0], bars[odd][1]])
 
-        elif visCanvas.coords(obj)[3] != limit:
-            visCanvas.move(obj, 0, 5)
-            afterTasks.append(visCanvas.after(round((1 / speed) * 10), update, obj, moveDir, limit, speed, swapStage, idOrder, swapList, swapIndex))
+                if swapStages[i][0] == 2:
+                    if bars[odd][0] + 5 >= limit:
+                        bars[odd][0] = limit
+                        aStages.append([bars[odd][0], bars[odd][1]]) if odd == 0 else bStages.append([bars[odd][0], bars[odd][1]])
+                    elif bars[odd][0] != limit:
+                        bars[odd][0] += 5
+                        aStages.append([bars[odd][0], bars[odd][1]]) if odd == 0 else bStages.append([bars[odd][0], bars[odd][1]])
+
+    idOrder[swapList[swapIndex][0]], idOrder[swapList[swapIndex][1]] = idOrder[swapList[swapIndex][1]], idOrder[swapList[swapIndex][0]]
+    return aStages, bStages, idOrder
 
 def validateCount():
     valid = True
@@ -432,7 +445,9 @@ def updateTutButton(bIdx):
 
 def startAlgorithm(algIdx, speed, data):
     swapList = Algorithms.bubble(data)
-    swap(swapList, speed, 0, 0, [1, 2, 3, 4, 5])
+    bPositions, aPositions, idOrder = createStages(swapList, 0, [(i + 1) for i in range(len(data))])
+    if len(aPositions) != 0:
+        moveBars(swapList, 0, 0, bPositions, aPositions, idOrder, False, speed)
 
 initialiseHome()
 window.mainloop()
