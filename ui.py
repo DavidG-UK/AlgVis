@@ -5,6 +5,10 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import simpledialog
 from tkinter import messagebox
+from ctypes import windll
+
+timeBeginPeriod = windll.winmm.timeBeginPeriod
+timeBeginPeriod(1)
 
 window = tk.Tk()
 window.geometry('1300x768')
@@ -300,11 +304,14 @@ def setupCanvas(data):
         rectIdData.append(rect)
         posCoords.append([x, y, xWid, yWid])
 
-def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseComplete):
+def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseComplete, pointerList, pointerIndex):
     global visCanvas, speed
     timePause = int((1/speed)*14)
     if timePause == 0:
         timePause = 1
+
+    if len(pointerList) != 0:
+        visCanvas.itemconfig(idOrder[pointerList[pointerIndex][0]], fill="#FFCCCB")
 
     visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='light blue')
     visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='light blue')
@@ -314,17 +321,25 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
         visCanvas.move(bars[0], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
         visCanvas.move(bars[1], aPositions[index][0] - visCanvas.coords(bars[1])[0], aPositions[index][1] - visCanvas.coords(bars[1])[3])
         index += 1
-        visCanvas.after(timePause, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, False)
+        visCanvas.after(timePause, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, False, pointerList, pointerIndex)
     else:
         if not pauseComplete:
-            visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, True)
+            visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, True, pointerList, pointerIndex)
         else:
             visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='')
             visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='')
+
             swapIndex += 1
+
+            if len(pointerList) != 0:
+                if swapIndex == pointerList[pointerIndex + 1][1]:                        
+                    visCanvas.itemconfig(idOrder[pointerList[pointerIndex][0]], fill='')
+                    pointerIndex += 1
+
             if swapIndex < len(swapList):
                 bPositions, aPositions, idOrder = createStages(swapList, swapIndex, idOrder)
-                visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, bPositions, aPositions, idOrder, False)
+                visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, bPositions, aPositions, idOrder, False, pointerList, pointerIndex)
+            
             else:
                 for obj in idOrder:
                     visCanvas.itemconfig(obj, fill="light green")
@@ -452,10 +467,18 @@ def updateTutButton(bIdx):
 
 def startAlgorithm(algIdx, data):
     global speed
-    swapList = Algorithms.insertion(data)
+    pointerList = []
+
+    if algIdx == 2:
+        swapList = Algorithms.bubble(data)
+    elif algIdx == 3:
+        swapList = Algorithms.bubble(data)
+    elif algIdx == 5:
+        swapList, pointerList = Algorithms.quick(data, [], [], 0, len(data) - 1)
+ 
     bPositions, aPositions, idOrder = createStages(swapList, 0, [(i + 1) for i in range(len(data))])
     if len(aPositions) != 0:
-        moveBars(swapList, 0, 0, bPositions, aPositions, idOrder, False)
+        moveBars(swapList, 0, 0, bPositions, aPositions, idOrder, False, pointerList, 0)
 
 initialiseHome()
 window.mainloop()

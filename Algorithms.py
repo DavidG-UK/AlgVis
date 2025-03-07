@@ -1,7 +1,7 @@
 import random
 import math
 
-def merge(data):
+def merge(data): # MUST BE NON RECURSIVE
     if len(data) > 1:
         m = len(data) // 2
         l = data[0:m]
@@ -87,21 +87,32 @@ def bubble(data):
     
     return swapList
 
-def quick(data):
-    if len(data) < 2:
-        return data
-    
-    pointerPos = 0
-    for i in range(1, len(data)):
-        if data[i] < data[0]:
-            data[i], data[pointerPos + 1] = data[pointerPos + 1], data[i]
+def quickPartition(data, swapList, pointerList, lowValue, highValue):
+    pointerPos = lowValue - 1
+    pivot = data[highValue]
+    pointerList.append([highValue, len(swapList)])
+    for i in range(lowValue, highValue):
+        if data[i] <= pivot:
             pointerPos += 1
-        
-    data[0], data[pointerPos] = data[pointerPos], data[0]
+            if i != pointerPos:
+                data[i], data[pointerPos] = data[pointerPos], data[i]
+                swapList.append([pointerPos, i])
 
-    left = quick(data[0:(pointerPos + 1)])
-    right = quick(data[(pointerPos + 1):len(data)])
-    return left + right
+    # if data[highValue] != data[pointerPos + 1]:
+    if highValue != pointerPos + 1:
+        data[highValue], data[pointerPos + 1] = data[pointerPos + 1], data[highValue]
+        swapList.append([pointerPos + 1, highValue])
+
+    return pointerPos + 1, data
+
+def quick(data, swapList, pointerList, lowValue, highValue):
+    if lowValue < highValue:
+        pivot, data = quickPartition(data, swapList, pointerList, lowValue, highValue)
+
+        quick(data, swapList, pointerList, lowValue, pivot - 1)
+        quick(data, swapList, pointerList, pivot + 1, highValue)
+
+    return swapList, pointerList
 
 def Radix(data):
     buckets = []
