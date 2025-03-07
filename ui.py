@@ -9,8 +9,8 @@ from tkinter import messagebox
 window = tk.Tk()
 window.geometry('1300x768')
 window.configure(background="black")
-algData = [5, 3, 4, 5, 10, 8, 4, 2]
 tutButtons = [None, None, None]
+speed = 1
 
 afterTasks = []
 MAXSCREENWIDTH = 1300
@@ -144,7 +144,7 @@ def displayTutorial(stage):
         tutFrame.rowconfigure(1, weight=2, uniform="i")
         tutFrame.columnconfigure((0, 2), weight=1, uniform="i")
         tutFrame.columnconfigure(1, weight=10, uniform="i")
-        taskFrame = createTaskbar(False, None, tutFrame)
+        taskFrame = createTaskbar(False, None, tutFrame, None)
         taskFrame.grid(row=1, column=1, sticky="nesw")
     
     if stage == 3: # visualisation tutorial
@@ -153,7 +153,7 @@ def displayTutorial(stage):
         tutFrame.rowconfigure(2, weight=4, uniform="j")
         tutFrame.columnconfigure((0, 2), weight=1, uniform="j")
         tutFrame.columnconfigure(1, weight=10, uniform="j")
-        taskFrame = createTaskbar(False, None, tutFrame)
+        taskFrame = createTaskbar(False, None, tutFrame, None)
         planeLabel = ttk.Label(tutFrame, text="plane", background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
         taskFrame.grid(row=1, column=1, sticky="nesw")
         planeLabel.grid(row=2, column=1, sticky="nesw")
@@ -186,8 +186,10 @@ def initialiseAlgSelect():
 
 def initialiseVisualisation(algidx):
     global visCanvas
+    
     clearScreen(True) # removes all formatting and widgets
 
+    algData = [random.randint(1, 50) for _ in range(30)]
     window.columnconfigure(0, weight=1, uniform="d") 
     window.columnconfigure(1, weight=1, uniform="d")
     window.columnconfigure(2, weight=4, uniform="d")
@@ -198,7 +200,7 @@ def initialiseVisualisation(algidx):
     window.rowconfigure(2, weight=1, uniform="d")
     window.rowconfigure(3, weight=2, uniform="d")
 
-    taskbar = createTaskbar(True, algidx, window) # calls function to create taskbar frame
+    taskbar = createTaskbar(True, algidx, window, algData) # calls function to create taskbar frame
     visCanvas = tk.Canvas(window, bg='light grey')
     setupCanvas(algData)
     displayBack("algSelect", "nesw")
@@ -237,18 +239,23 @@ def displayBack(backScreen, xyAlignment):
         backButton = tk.Button(window, text="back", background="white", font=("Calibri", 14, "bold"), command=initialiseAlgSelect)
     backButton.grid(row=0, column=0, sticky=xyAlignment)
 
-def createTaskbar(active, algidx, master):
-    speed = 1
+def updateSpeed(event):
+    global speedScale, speed
+    speed = speedScale.get()
+
+def createTaskbar(active, algidx, master, algData):
+    global speedScale, speed
+
     taskFrame = tk.Frame(master) # frame definition with formatting
     taskFrame.rowconfigure(0, weight=1, uniform="g")
     taskFrame.columnconfigure(0, weight=1, uniform="g")
     taskFrame.columnconfigure(1, weight=4, uniform="g")
     taskFrame.columnconfigure(2, weight=3, uniform="g")
 
-    speedScale = tk.Scale(taskFrame, from_=0.1, to=10, orient="horizontal", variable=speed, label="Execution speed", resolution=0.1)
+    speedScale = tk.Scale(taskFrame, from_=0.1, to=10, orient="horizontal", variable=speed, command=updateSpeed, label="Execution speed", resolution=0.1)
     speedScale.set(speed)
-
-    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx, speed = speed, data = algData: startAlgorithm(algIdx, speed, data) if active == True else None) # creating widgets and defining behaviour
+    
+    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data) if active == True else None) # creating widgets and defining behaviour
 
     inputFrame = tk.Frame(taskFrame)
 
@@ -293,8 +300,8 @@ def setupCanvas(data):
         rectIdData.append(rect)
         posCoords.append([x, y, xWid, yWid])
 
-def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseComplete, speed):
-    global visCanvas
+def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseComplete):
+    global visCanvas, speed
     timePause = int((1/speed)*14)
     if timePause == 0:
         timePause = 1
@@ -307,17 +314,17 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
         visCanvas.move(bars[0], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
         visCanvas.move(bars[1], aPositions[index][0] - visCanvas.coords(bars[1])[0], aPositions[index][1] - visCanvas.coords(bars[1])[3])
         index += 1
-        visCanvas.after(timePause, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, False, speed)
+        visCanvas.after(timePause, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, False)
     else:
         if not pauseComplete:
-            visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, True, speed)
+            visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, True)
         else:
             visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='')
             visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='')
             swapIndex += 1
             if swapIndex < len(swapList):
                 bPositions, aPositions, idOrder = createStages(swapList, swapIndex, idOrder)
-                visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, bPositions, aPositions, idOrder, False, speed)
+                visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, bPositions, aPositions, idOrder, False)
             else:
                 for obj in idOrder:
                     visCanvas.itemconfig(obj, fill="light green")
@@ -443,11 +450,12 @@ def updateTutButton(bIdx):
     else:
         tutButtons[bIdx].config(background="red")
 
-def startAlgorithm(algIdx, speed, data):
-    swapList = Algorithms.bubble(data)
+def startAlgorithm(algIdx, data):
+    global speed
+    swapList = Algorithms.insertion(data)
     bPositions, aPositions, idOrder = createStages(swapList, 0, [(i + 1) for i in range(len(data))])
     if len(aPositions) != 0:
-        moveBars(swapList, 0, 0, bPositions, aPositions, idOrder, False, speed)
+        moveBars(swapList, 0, 0, bPositions, aPositions, idOrder, False)
 
 initialiseHome()
 window.mainloop()

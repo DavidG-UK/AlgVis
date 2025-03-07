@@ -59,16 +59,17 @@ def linear(data, value):
             return "not in list"
 
 def insertion(data):
+    swapList = []
     for i in range(1, len(data)):
         current = data[i]
         prev_index = i - 1
 
         while prev_index >= 0 and current < data[prev_index]:
-            data[prev_index + 1] = data[prev_index]
+            data[prev_index + 1], data[prev_index] = data[prev_index], data[prev_index + 1]
+            swapList.append([prev_index, prev_index + 1])
             prev_index -= 1
-        data[prev_index + 1] = current
     
-    return data
+    return swapList
 
 def bubble(data):
     swapList = []
@@ -269,4 +270,4 @@ def greedyBFS(adjMatrix, root, goal):
         goalPath.reverse()
 
     return goalPath, nodeTable
-#print(insertion([1, 4, 6, 3, 2, 1, 2, 2, 4]))
+#print(insertion([11, 4, 6, 3, 12, 7, 2, 4, 4]))
