@@ -11,12 +11,15 @@ timeBeginPeriod = windll.winmm.timeBeginPeriod
 timeBeginPeriod(1)
 
 window = tk.Tk()
-window.geometry('1300x768')
+# w, h = window.winfo_screenwidth(), window.winfo_screenheight()
+# window.geometry("%dx%d+0+0" % (w, h))
+window.state("zoomed")
+
 window.configure(background="black")
 tutButtons = [None, None, None]
+rectIdData = []
 speed = 1
 
-afterTasks = []
 MAXSCREENWIDTH = 1300
 MAXSCREENHEIGHT = 400
 MAXBARWIDTH = 100
@@ -193,7 +196,7 @@ def initialiseVisualisation(algidx):
     
     clearScreen(True) # removes all formatting and widgets
 
-    algData = [random.randint(1, 50) for _ in range(30)]
+    algData = [random.randint(1, 50) for _ in range(60)]
     window.columnconfigure(0, weight=1, uniform="d") 
     window.columnconfigure(1, weight=1, uniform="d")
     window.columnconfigure(2, weight=4, uniform="d")
@@ -285,7 +288,7 @@ def setupCanvas(data):
     global visCanvas
 
     padX = 50
-    rectIdData = []
+    rectIdData.clear()
     posCoords = []
 
     barWidth = math.floor((MAXSCREENWIDTH - (padX*2)) / ((len(data) * 2) - 1))
@@ -304,45 +307,86 @@ def setupCanvas(data):
         rectIdData.append(rect)
         posCoords.append([x, y, xWid, yWid])
 
-def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseComplete, pointerList, pointerIndex):
+def verifySearchValue():
+    value = simpledialog.askstring("tk", "What is the value of the element you wish to search for")
+
+    if value == None:
+        return None
+    
+    try:
+        value = int(value)
+    except:
+        messagebox.showwarning(message="Please enter a single integer")
+        return None
+
+    if not isinstance(value, int):
+        messagebox.showwarning(message="Please enter a single integer")
+        return None
+    
+    return value
+    
+def searchVisualisation(data, pointerList, value, pointerIndex):
     global visCanvas, speed
-    timePause = int((1/speed)*14)
+
+    timePause = int(14/speed)
     if timePause == 0:
         timePause = 1
 
-    if len(pointerList) != 0:
-        visCanvas.itemconfig(idOrder[pointerList[pointerIndex][0]], fill="#FFCCCB")
+    for i in range(len(data)):
+        visCanvas.itemconfig(rectIdData[i], fill="")
 
-    visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='light blue')
-    visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='light blue')
-
-    if index < len(aPositions):
-        bars = [idOrder[swapList[swapIndex][1]], idOrder[swapList[swapIndex][0]]] 
-        visCanvas.move(bars[0], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
-        visCanvas.move(bars[1], aPositions[index][0] - visCanvas.coords(bars[1])[0], aPositions[index][1] - visCanvas.coords(bars[1])[3])
-        index += 1
-        visCanvas.after(timePause, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, False, pointerList, pointerIndex)
-    else:
-        if not pauseComplete:
-            visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, True, pointerList, pointerIndex)
+    if pointerIndex == len(pointerList) - 1:
+        if data[pointerList[pointerIndex]] == value:
+            visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="light green")
         else:
-            visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='')
-            visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='')
+            for i in range(len(data)):
+                visCanvas.itemconfig(rectIdData[i], fill="red")
+    else:
+        print(visCanvas.find_all())
+        visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="red")
+        pointerIndex += 1
+        visCanvas.after(timePause * 100, searchVisualisation, data, pointerList, value, pointerIndex)
 
-            swapIndex += 1
+def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseComplete):
+    global visCanvas, speed
+    timePause = int(14/speed)
+    if timePause == 0:
+        timePause = 1
 
-            if len(pointerList) != 0:
-                if swapIndex == pointerList[pointerIndex + 1][1]:                        
-                    visCanvas.itemconfig(idOrder[pointerList[pointerIndex][0]], fill='')
-                    pointerIndex += 1
+    if swapIndex == len(swapList):
+        for obj in idOrder:
+            visCanvas.itemconfig(obj, fill="light green")
 
-            if swapIndex < len(swapList):
-                bPositions, aPositions, idOrder = createStages(swapList, swapIndex, idOrder)
-                visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, bPositions, aPositions, idOrder, False, pointerList, pointerIndex)
-            
+    elif len(swapList[swapIndex]) == 1:         
+        for obj in idOrder:
+            visCanvas.itemconfig(obj, fill="")
+
+        visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='red')
+        visCanvas.after(timePause * 150, moveBars, swapList, swapIndex + 1, 0, bPositions, aPositions, idOrder, False)
+    
+    else:
+        if aPositions == []:
+            bPositions, aPositions, idOrder = createStages(swapList, swapIndex, rectIdData)
+
+        visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='light blue')
+        visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='light blue')
+
+        if index < len(aPositions):
+            bars = [idOrder[swapList[swapIndex][1]], idOrder[swapList[swapIndex][0]]] 
+            visCanvas.move(bars[0], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
+            visCanvas.move(bars[1], aPositions[index][0] - visCanvas.coords(bars[1])[0], aPositions[index][1] - visCanvas.coords(bars[1])[3])
+            index += 1
+            visCanvas.after(timePause, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, False)
+        else:
+            if not pauseComplete:
+                visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, True)
             else:
-                for obj in idOrder:
-                    visCanvas.itemconfig(obj, fill="light green")
+                visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='')
+                visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='')
+
+                if swapIndex < len(swapList):
+                    swapIndex += 1
+                    visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, [], [], idOrder, False)         
 
 def createStages(swapList, swapIndex, idOrder):
     global visCanvas
@@ -407,7 +451,11 @@ def validateCount():
         count = int(count)
     except:
         messagebox.showwarning(message="Please enter a single integer")
-        return
+        return None
+
+    if not isinstance(count, int):
+        messagebox.showwarning(message="Please enter a single integer")
+        return None
 
     if count < 1 or count > 50:
         valid = False
@@ -468,17 +516,28 @@ def updateTutButton(bIdx):
 def startAlgorithm(algIdx, data):
     global speed
     pointerList = []
-
+    if algIdx <= 1:
+        value = verifySearchValue()
+    
+    if algIdx == 0 and value != None:
+        pointerList, value = Algorithms.linear(data, value)
+    if algIdx == 1 and value != None:
+        data = sorted(data)
+        visCanvas.delete("all")
+        setupCanvas(data)
+        pointerList, value = Algorithms.binary(data, value)
     if algIdx == 2:
         swapList = Algorithms.bubble(data)
     elif algIdx == 3:
         swapList = Algorithms.bubble(data)
     elif algIdx == 5:
-        swapList, pointerList = Algorithms.quick(data, [], [], 0, len(data) - 1)
- 
-    bPositions, aPositions, idOrder = createStages(swapList, 0, [(i + 1) for i in range(len(data))])
-    if len(aPositions) != 0:
-        moveBars(swapList, 0, 0, bPositions, aPositions, idOrder, False, pointerList, 0)
+        swapList = Algorithms.quick(data, [], 0, len(data) - 1)
+
+    if algIdx <= 1:
+        searchVisualisation(data, pointerList, value, 0)
+    if algIdx >= 2 and algIdx <= 6:
+        moveBars(swapList, 0, 0, [], [], rectIdData, False)
+    
 
 initialiseHome()
 window.mainloop()
