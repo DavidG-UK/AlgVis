@@ -18,6 +18,7 @@ window.state("zoomed")
 window.configure(background="black")
 tutButtons = [None, None, None]
 rectIdData = []
+externalButtons = {}
 speed = 1
 
 MAXSCREENWIDTH = 1300
@@ -196,7 +197,7 @@ def initialiseVisualisation(algidx):
     
     clearScreen(True) # removes all formatting and widgets
 
-    algData = [random.randint(1, 50) for _ in range(60)]
+    algData = [random.randint(1, 50) for _ in range(10)]
     window.columnconfigure(0, weight=1, uniform="d") 
     window.columnconfigure(1, weight=1, uniform="d")
     window.columnconfigure(2, weight=4, uniform="d")
@@ -263,6 +264,7 @@ def createTaskbar(active, algidx, master, algData):
     speedScale.set(speed)
     
     startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data) if active == True else None) # creating widgets and defining behaviour
+    externalButtons["startButton"] = startButton
 
     inputFrame = tk.Frame(taskFrame)
 
@@ -272,8 +274,8 @@ def createTaskbar(active, algidx, master, algData):
 
     dataInput = tk.StringVar()
     entryBox = ttk.Entry(inputFrame, textvariable=dataInput)
-    randomButton = tk.Button(inputFrame, text="Random", background="white", font=("Calibri", 14, "bold"), command=lambda input = None, mode = 0: validateCount() if active == True else None)
-    inputButton = tk.Button(inputFrame, text="Enter", background="white", font=("Calibri", 14, "bold"), command=lambda input = dataInput, mode = 1: validateData(input) if active == True else None)
+    randomButton = tk.Button(inputFrame, text="Random", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx: validateCount(algIdx) if active == True else None)
+    inputButton = tk.Button(inputFrame, text="Enter", background="white", font=("Calibri", 14, "bold"), command=lambda input = dataInput, algIdx = algidx: validateData(input, algIdx) if active == True else None)
 
     inputButton.grid(row=0, column=0, sticky="nesw") # displaying widgets within frame
     entryBox.grid(row=0, column=1, sticky="nesw")
@@ -342,7 +344,6 @@ def searchVisualisation(data, pointerList, value, pointerIndex):
             for i in range(len(data)):
                 visCanvas.itemconfig(rectIdData[i], fill="red")
     else:
-        print(visCanvas.find_all())
         visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="red")
         pointerIndex += 1
         visCanvas.after(timePause * 100, searchVisualisation, data, pointerList, value, pointerIndex)
@@ -357,22 +358,23 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
         for obj in idOrder:
             visCanvas.itemconfig(obj, fill="light green")
 
-    elif len(swapList[swapIndex]) == 1:         
+    elif swapList[swapIndex][1] == "pointer":         
         for obj in idOrder:
             visCanvas.itemconfig(obj, fill="")
 
-        visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='red')
+        for i in range(len(swapList[swapIndex][0])):
+            visCanvas.itemconfig(idOrder[swapList[swapIndex][0][i]], fill='red')
         visCanvas.after(timePause * 150, moveBars, swapList, swapIndex + 1, 0, bPositions, aPositions, idOrder, False)
     
     else:
         if aPositions == []:
             bPositions, aPositions, idOrder = createStages(swapList, swapIndex, rectIdData)
 
-        visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='light blue')
-        visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='light blue')
+        visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='light blue')
+        visCanvas.itemconfig(idOrder[swapList[swapIndex][0][0]], fill='light blue')
 
         if index < len(aPositions):
-            bars = [idOrder[swapList[swapIndex][1]], idOrder[swapList[swapIndex][0]]] 
+            bars = [idOrder[swapList[swapIndex][0][1]], idOrder[swapList[swapIndex][0][0]]] 
             visCanvas.move(bars[0], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
             visCanvas.move(bars[1], aPositions[index][0] - visCanvas.coords(bars[1])[0], aPositions[index][1] - visCanvas.coords(bars[1])[3])
             index += 1
@@ -381,8 +383,8 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
             if not pauseComplete:
                 visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, True)
             else:
-                visCanvas.itemconfig(idOrder[swapList[swapIndex][1]], fill='')
-                visCanvas.itemconfig(idOrder[swapList[swapIndex][0]], fill='')
+                visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='')
+                visCanvas.itemconfig(idOrder[swapList[swapIndex][0][0]], fill='')
 
                 if swapIndex < len(swapList):
                     swapIndex += 1
@@ -393,9 +395,9 @@ def createStages(swapList, swapIndex, idOrder):
     aStages = []
     bStages = []
 
-    swapStages = [[1, 100], [1, 100], [2, visCanvas.coords(idOrder[swapList[swapIndex][1]])[0]], [0, visCanvas.coords(idOrder[swapList[swapIndex][0]])[0]], [3, MAXSCREENHEIGHT], [3, MAXSCREENHEIGHT]]
+    swapStages = [[1, 100], [1, 100], [2, visCanvas.coords(idOrder[swapList[swapIndex][0][1]])[0]], [0, visCanvas.coords(idOrder[swapList[swapIndex][0][0]])[0]], [3, MAXSCREENHEIGHT], [3, MAXSCREENHEIGHT]]
     
-    bars = [[visCanvas.coords(idOrder[swapList[swapIndex][0]])[0], visCanvas.coords(idOrder[swapList[swapIndex][0]])[3]], [visCanvas.coords(idOrder[swapList[swapIndex][1]])[0], visCanvas.coords(idOrder[swapList[swapIndex][1]])[3]]]
+    bars = [[visCanvas.coords(idOrder[swapList[swapIndex][0][0]])[0], visCanvas.coords(idOrder[swapList[swapIndex][0][0]])[3]], [visCanvas.coords(idOrder[swapList[swapIndex][0][1]])[0], visCanvas.coords(idOrder[swapList[swapIndex][0][1]])[3]]]
 
     for i in range(len(swapStages)):
         limit = swapStages[i][1]
@@ -437,10 +439,10 @@ def createStages(swapList, swapIndex, idOrder):
                         bars[odd][0] += 5
                         aStages.append([bars[odd][0], bars[odd][1]]) if odd == 0 else bStages.append([bars[odd][0], bars[odd][1]])
 
-    idOrder[swapList[swapIndex][0]], idOrder[swapList[swapIndex][1]] = idOrder[swapList[swapIndex][1]], idOrder[swapList[swapIndex][0]]
+    idOrder[swapList[swapIndex][0][0]], idOrder[swapList[swapIndex][0][1]] = idOrder[swapList[swapIndex][0][1]], idOrder[swapList[swapIndex][0][0]]
     return aStages, bStages, idOrder
 
-def validateCount():
+def validateCount(algidx):
     valid = True
     count = simpledialog.askstring("tk", "How many random elements should be generated")
 
@@ -467,9 +469,12 @@ def validateCount():
         for _ in range(count):
             algData.append(random.randint(1, 25))
 
-        setupCanvas(algData)
 
-def validateData(userInput):
+        setupCanvas(algData)
+        if "startButton" in externalButtons:
+            externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
+
+def validateData(userInput, algidx):
     userInput = userInput.get()
     data = None
     try:
@@ -489,6 +494,8 @@ def validateData(userInput):
         algData = data  
         visCanvas.delete("all")
         setupCanvas(algData)
+        if "startButton" in externalButtons:
+            externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
 
 def displayAlgInfo(algidx):
     titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
@@ -529,7 +536,9 @@ def startAlgorithm(algIdx, data):
     if algIdx == 2:
         swapList = Algorithms.bubble(data)
     elif algIdx == 3:
-        swapList = Algorithms.bubble(data)
+        swapList = Algorithms.insertion(data)
+    elif algIdx == 4:
+        swapList = Algorithms.mergeStart(data, [], 0, len(data) - 1)
     elif algIdx == 5:
         swapList = Algorithms.quick(data, [], 0, len(data) - 1)
 

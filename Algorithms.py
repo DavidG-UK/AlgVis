@@ -1,37 +1,37 @@
 import random
 import math
 
-def merge(data):
-    if len(data) > 1:
-        m = len(data) // 2
-        l = data[0:m]
-        r = data[m:len(data)]
+def mergeStart(data, swapList, l, r):
+	if l < r:
+		m = (l + r) // 2
 
-        l = merge(l)
-        r = merge(r)
+		mergeStart(data, swapList, l, m)
+		mergeStart(data, swapList, m + 1, r)
+		merge(data, swapList, l, m, r)
 
-        left_index = 0
-        right_index = 0
+	return swapList
 
-        merged = []
-        while left_index < len(l) and right_index < len(r):
-            if l[left_index] < r[right_index]:
-                merged.append(l[left_index])
-                left_index += 1
-            else:
-                merged.append(r[right_index])
-                right_index += 1
+def merge(data, swapList, l, m, r):
+	l2 = m + 1
+	swapList.append([[l, m, m+1, r], "pointer"])
+	if data[m] <= data[l2]:
+		return
+	
+	while l <= m and l2 <= r:
+		if data[l] < data[l2]:
+			l += 1
+		else:
+			index = l2
+			while index != l:
+				data[index - 1], data[index] = data[index], data[index - 1]
+				swapList.append([[index - 1, index], "swap"])
+				index -= 1
 
-        while left_index < len(l):
-            merged.append(l[left_index])
-            left_index += 1
+			l += 1
+			m += 1
+			l2 += 1
 
-        while right_index < len(r):
-            merged.append(r[right_index])
-            right_index += 1
-
-        return merged
-    return data
+	return swapList
 
 def binary(data, value):
     found = False
@@ -70,7 +70,7 @@ def insertion(data):
 
         while prev_index >= 0 and current < data[prev_index]:
             data[prev_index + 1], data[prev_index] = data[prev_index], data[prev_index + 1]
-            swapList.append([prev_index, prev_index + 1])
+            swapList.append([[prev_index, prev_index + 1], "swap"])
             prev_index -= 1
     
     return swapList
@@ -82,7 +82,7 @@ def bubble(data):
         swaps = 0
         for i in range(len(data) - 1):
             if data[i] > data[i + 1]:
-                swapList.append([i, i + 1])
+                swapList.append([[i, i + 1], "swap"])
                 swaps += 1
                 data[i], data[i + 1] = data[i + 1], data[i]
 
@@ -94,17 +94,17 @@ def bubble(data):
 def quickPartition(data, swapList, lowValue, highValue):
     pointerPos = lowValue - 1
     pivot = data[highValue]
-    swapList.append([highValue])
+    swapList.append([[highValue], "pointer"])
     for i in range(lowValue, highValue):
         if data[i] <= pivot:
             pointerPos += 1
             if i != pointerPos:
                 data[i], data[pointerPos] = data[pointerPos], data[i]
-                swapList.append([pointerPos, i])
+                swapList.append([[pointerPos, i], "swap"])
 
     if highValue != pointerPos + 1:
         data[highValue], data[pointerPos + 1] = data[pointerPos + 1], data[highValue]
-        swapList.append([pointerPos + 1, highValue])
+        swapList.append([[pointerPos + 1, highValue], "swap"])
 
     return pointerPos + 1, data
 
