@@ -18,6 +18,8 @@ window.state("zoomed")
 window.configure(background="black")
 tutButtons = [None, None, None]
 rectIdData = []
+bucketIdData = []
+textIdData = []
 externalButtons = {}
 speed = 1
 
@@ -60,11 +62,11 @@ def initialiseHome():
         else:
             window.rowconfigure(i, weight=2, uniform="a")
 
-    algorithmButton = tk.Button(window, text="Algorithms", background="light blue", font=("Calibri", 14, "bold"), command=initialiseAlgSelect)
-    optionsButton = tk.Button(window, text="Options", background="light blue", font=("Calibri", 14, "bold"), command=initialiseOptions)
-    tutorialButton = tk.Button(window, text="Tutorial", background="light blue", font=("Calibri", 14, "bold"), command=lambda tutStage = 0: displayTutorial(tutStage))
-    titleLabel = ttk.Label(window, text="ALGVIS", background="black", anchor="center", font=("Calibri", 30, "bold"), foreground="light blue")
-    welcomeLabel = ttk.Label(window, text="Welcome to Algvis! here you can visualise many common algorithms", background="black", anchor="center", font=("Calibri", 15, "bold"), foreground="light blue")
+    algorithmButton = tk.Button(window, text="Algorithms", background="light blue", font=("Roboto Mono", 14, "bold"), command=initialiseAlgSelect)
+    optionsButton = tk.Button(window, text="Options", background="light blue", font=("Roboto Mono", 14, "bold"), command=initialiseOptions)
+    tutorialButton = tk.Button(window, text="Tutorial", background="light blue", font=("Roboto Mono", 14, "bold"), command=lambda tutStage = 0: displayTutorial(tutStage))
+    titleLabel = ttk.Label(window, text="ALGVIS", background="black", anchor="center", font=("Roboto Mono", 30, "bold"), foreground="light blue")
+    welcomeLabel = ttk.Label(window, text="Welcome to Algvis! here you can visualise many common algorithms", background="black", anchor="center", font=("Roboto Mono", 15, "bold"), foreground="light blue")
 
     algorithmButton.grid(row=3, column=1, sticky="nesw")
     optionsButton.grid(row=5, column=1, sticky="nesw")
@@ -88,10 +90,10 @@ def initialiseOptions():
     displayBack("home", "nw")
 
     for i in range(len(options)):
-        optionLabel = ttk.Label(window, text=options[i][0], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+        optionLabel = ttk.Label(window, text=options[i][0], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
         optionLabel.grid(row=(i*2)+1, column=1, sticky="nesw")
 
-        optionButton = tk.Button(window, background="green" if options[i][1] == True else "red", font=("Calibri", 14, "bold"), command=lambda idx=i: updateButton(idx))
+        optionButton = tk.Button(window, background="green" if options[i][1] == True else "red", font=("Roboto Mono", 14, "bold"), command=lambda idx=i: updateButton(idx))
         options[i][2] = optionButton
         optionButton.grid(row=(i*2)+1, column=2, sticky="nesw")
 
@@ -113,10 +115,10 @@ def displayTutorial(stage):
     window.rowconfigure(3, weight=4, uniform="f")
 
     displayBack("home", "nw")
-    expLabel = ttk.Label(window, text=labelText[stage], background="light blue", anchor="center", font=("Calibri", 18, "bold"), foreground="black")
+    expLabel = ttk.Label(window, text=labelText[stage], background="light blue", anchor="center", font=("Roboto Mono", 18, "bold"), foreground="black")
     expLabel.grid(row=2, column=1, sticky="nesw", columnspan=2)
-    forward = tk.Button(window, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda stage = stage: displayTutorial(stage + 1) if stage < len(labelText) - 1 else initialiseHome())
-    backward = tk.Button(window, text="⏴", background="white", font=("Calibri", 14, "bold"), command=lambda stage = stage: displayTutorial(stage - 1) if stage > 0 else None)
+    forward = tk.Button(window, text="⏵", background="white", font=("Roboto Mono", 14, "bold"), command=lambda stage = stage: displayTutorial(stage + 1) if stage < len(labelText) - 1 else initialiseHome())
+    backward = tk.Button(window, text="⏴", background="white", font=("Roboto Mono", 14, "bold"), command=lambda stage = stage: displayTutorial(stage - 1) if stage > 0 else None)
     backward.grid(row=1, column=1, sticky="nesw")
     forward.grid(row=1, column=2, sticky="nesw")
     tutFrame = ttk.Frame(window)
@@ -125,7 +127,7 @@ def displayTutorial(stage):
         tutFrame.columnconfigure((0, 2), weight=1, uniform="g")
         tutFrame.columnconfigure(1, weight=3, uniform="g")
         tutFrame.rowconfigure((0, 1, 2), weight=1, uniform="g")
-        algorithmButton = tk.Button(tutFrame, text="Algorithms", background="light blue", font=("Calibri", 14, "bold"))
+        algorithmButton = tk.Button(tutFrame, text="Algorithms", background="light blue", font=("Roboto Mono", 14, "bold"))
         algorithmButton.grid(row=1, column=1, sticky="nesw")
 
     if stage == 1: # options tutorial
@@ -140,10 +142,10 @@ def displayTutorial(stage):
             tutFrame.rowconfigure(i + 1, weight=1, uniform="h")
 
         for i in range(len(options)):
-            opLabel = ttk.Label(tutFrame, text=options[i][0], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+            opLabel = ttk.Label(tutFrame, text=options[i][0], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
             opLabel.grid(row=(i*2)+1, column=1, sticky="nesw")
 
-            optionButton = tk.Button(tutFrame, background="green", font=("Calibri", 14, "bold"), command=lambda idx=i: updateTutButton(idx))
+            optionButton = tk.Button(tutFrame, background="green", font=("Roboto Mono", 14, "bold"), command=lambda idx=i: updateTutButton(idx))
             tutButtons[i] = optionButton
             optionButton.grid(row=(i*2)+1, column=2, sticky="nesw")
     
@@ -162,7 +164,7 @@ def displayTutorial(stage):
         tutFrame.columnconfigure((0, 2), weight=1, uniform="j")
         tutFrame.columnconfigure(1, weight=10, uniform="j")
         taskFrame = createTaskbar(False, None, tutFrame, None)
-        planeLabel = ttk.Label(tutFrame, text="plane", background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+        planeLabel = ttk.Label(tutFrame, text="plane", background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
         taskFrame.grid(row=1, column=1, sticky="nesw")
         planeLabel.grid(row=2, column=1, sticky="nesw")
     if stage == 4:
@@ -171,7 +173,7 @@ def displayTutorial(stage):
     if stage == 6: # end
         tutFrame.rowconfigure(0, weight=1, uniform="l")
         tutFrame.columnconfigure(0, weight=1, uniform="l")
-        smileLabel = ttk.Label(tutFrame, text=":D", background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+        smileLabel = ttk.Label(tutFrame, text=":D", background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
         smileLabel.grid(row=0, column=0, sticky="nesw")
     tutFrame.grid(row=3, column=1, sticky="nesw", columnspan=2)
 
@@ -189,7 +191,7 @@ def initialiseAlgSelect():
     displayBack("home", "nw")
 
     for i in range(len(ALGORITHMS)):
-        algButtons.append(tk.Button(window, text=ALGORITHMS[i][0], background="light blue", foreground="black", font=("Calibri", 14, "bold"), command=lambda idx=i: displayAlgInfo(idx)))
+        algButtons.append(tk.Button(window, text=ALGORITHMS[i][0], background="light blue", foreground="black", font=("Roboto Mono", 14, "bold"), command=lambda idx=i: displayAlgInfo(idx)))
         algButtons[i].grid(row=i+1, column=0, sticky="nesw")
 
 def initialiseVisualisation(algidx):
@@ -197,7 +199,7 @@ def initialiseVisualisation(algidx):
     
     clearScreen(True) # removes all formatting and widgets
 
-    algData = [random.randint(1, 50) for _ in range(10)]
+    algData = [356, 1293, 5544, 3298, 5098, 8812, 3795, 12] # random.randint(1, 50) for _ in range(10)
     window.columnconfigure(0, weight=1, uniform="d") 
     window.columnconfigure(1, weight=1, uniform="d")
     window.columnconfigure(2, weight=4, uniform="d")
@@ -210,7 +212,12 @@ def initialiseVisualisation(algidx):
 
     taskbar = createTaskbar(True, algidx, window, algData) # calls function to create taskbar frame
     visCanvas = tk.Canvas(window, bg='light grey')
-    setupCanvas(algData)
+
+    if algidx <= 5:
+        setupCanvas(algData)
+    else:
+        setupRadix(algData)
+
     displayBack("algSelect", "nesw")
     gridFrame = ttk.Frame(window)
     gridFrame.rowconfigure(0, weight=1, uniform="k")
@@ -227,24 +234,24 @@ def initialiseVisualisation(algidx):
         codeFrame.rowconfigure((0, 1, 2, 3, 4, 5, 6, 7), weight=1, uniform="f")
         currentLine = "placeholder text"
         for i in range(8):
-            lineLabels.append(ttk.Label(codeFrame, text=currentLine, background="white", anchor="center", font=("Calibri", 14), foreground="black"))
+            lineLabels.append(ttk.Label(codeFrame, text=currentLine, background="white", anchor="center", font=("Roboto Mono", 14), foreground="black"))
             lineLabels[i].grid(row=i, column=0, sticky="nesw")
 
         codeFrame.grid(row=2, column=3, rowspan=2, sticky="nesw")
 
     if options[1][1] == True:
-        onLabel = ttk.Label(window, text=ALGORITHMS[algidx][2], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+        onLabel = ttk.Label(window, text=ALGORITHMS[algidx][2], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
         onLabel.grid(row=2, column=0, rowspan=2 if options[2][1] == False else 1, columnspan=2, sticky="nesw")
 
     if options[2][1] == True:
-        onDescLabel = ttk.Label(window, text=ALGORITHMS[algidx][3], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
+        onDescLabel = ttk.Label(window, text=ALGORITHMS[algidx][3], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
         onDescLabel.grid(row=3, column=0, columnspan=2, sticky="nesw")
 
 def displayBack(backScreen, xyAlignment):
     if backScreen == "home":
-        backButton = tk.Button(window, text="back", background="white", font=("Calibri", 14, "bold"), command=initialiseHome)
+        backButton = tk.Button(window, text="back", background="white", font=("Roboto Mono", 14, "bold"), command=initialiseHome)
     elif backScreen == "algSelect":
-        backButton = tk.Button(window, text="back", background="white", font=("Calibri", 14, "bold"), command=initialiseAlgSelect)
+        backButton = tk.Button(window, text="back", background="white", font=("Roboto Mono", 14, "bold"), command=initialiseAlgSelect)
     backButton.grid(row=0, column=0, sticky=xyAlignment)
 
 def updateSpeed(event):
@@ -263,7 +270,7 @@ def createTaskbar(active, algidx, master, algData):
     speedScale = tk.Scale(taskFrame, from_=0.1, to=10, orient="horizontal", variable=speed, command=updateSpeed, label="Execution speed", resolution=0.1)
     speedScale.set(speed)
     
-    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data) if active == True else None) # creating widgets and defining behaviour
+    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Roboto Mono", 14, "bold"), command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data) if active == True else None) # creating widgets and defining behaviour
     externalButtons["startButton"] = startButton
 
     inputFrame = tk.Frame(taskFrame)
@@ -274,8 +281,8 @@ def createTaskbar(active, algidx, master, algData):
 
     dataInput = tk.StringVar()
     entryBox = ttk.Entry(inputFrame, textvariable=dataInput)
-    randomButton = tk.Button(inputFrame, text="Random", background="white", font=("Calibri", 14, "bold"), command=lambda algIdx = algidx: validateCount(algIdx) if active == True else None)
-    inputButton = tk.Button(inputFrame, text="Enter", background="white", font=("Calibri", 14, "bold"), command=lambda input = dataInput, algIdx = algidx: validateData(input, algIdx) if active == True else None)
+    randomButton = tk.Button(inputFrame, text="Random", background="white", font=("Roboto Mono", 14, "bold"), command=lambda algIdx = algidx: validateCount(algIdx) if active == True else None)
+    inputButton = tk.Button(inputFrame, text="Enter", background="white", font=("Roboto Mono", 14, "bold"), command=lambda input = dataInput, algIdx = algidx: validateData(input, algIdx) if active == True else None)
 
     inputButton.grid(row=0, column=0, sticky="nesw") # displaying widgets within frame
     entryBox.grid(row=0, column=1, sticky="nesw")
@@ -442,6 +449,51 @@ def createStages(swapList, swapIndex, idOrder):
     idOrder[swapList[swapIndex][0][0]], idOrder[swapList[swapIndex][0][1]] = idOrder[swapList[swapIndex][0][1]], idOrder[swapList[swapIndex][0][0]]
     return aStages, bStages, idOrder
 
+def setupRadix(data):
+    global visCanvas
+    SPACING = 10
+    padX = 100
+    rectIdData.clear()
+    
+    availableSpace = MAXSCREENWIDTH - (2 * padX)
+    textLength = len(str(max(data)))
+    intermediatePauses = (len(data) - 1) * SPACING
+
+    allocatedCharLength = math.floor((availableSpace - intermediatePauses) / (textLength * len(data)))
+
+    bucketSpace = math.floor((availableSpace - 9*SPACING) / 10)
+    if (textLength * allocatedCharLength) > bucketSpace:
+        allocatedCharLength = int(bucketSpace / textLength)
+
+    for i in range(len(data)):
+        textIdData.append(visCanvas.create_text(padX + (textLength * allocatedCharLength * i) + (SPACING * i), MAXSCREENHEIGHT - 300, text=str(data[i]).rjust(textLength, "0"), fill="black", font=("Roboto Mono", allocatedCharLength)))
+    
+    for i in range(10):
+        bucketIdData.append(visCanvas.create_text(padX + (bucketSpace * i) + (SPACING * i), MAXSCREENHEIGHT - SPACING, text = str(i), fill="black", font=("Roboto Mono", 15)))
+    
+def radixVisualisation(data, swapList):
+    idOrder = [i for i in range(len(data))]
+    buckets = [[] * 10]
+
+    for event in swapList:
+        if event[1] == "move in":
+            stages = animateMove(event, idOrder)
+            # for stage in stages:
+            #     pass
+                #visCanvas.move(idOrder[event[0][0]], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
+
+def animateMove(event, idOrder):
+    print(visCanvas.find_all(), visCanvas.coords(idOrder[event[0][0]] + 1))
+    textX, textY = visCanvas.coords(idOrder[event[0][0]] + 1)[0], visCanvas.coords(idOrder[event[0][0]] + 1)[1]
+    bucketX, bucketY = visCanvas.coords(event[0][1] + max(idOrder) + 1)[0], visCanvas.coords(event[0][1]+ max(idOrder) + 1)[1]
+
+    if abs(bucketX - textX) > abs(bucketY - textY):
+        totalStages = math.ceil(abs(bucketX - textX)) / 5
+    else:
+        totalStages = math.ceil(abs(bucketY - textY)) / 5
+    
+    print(textX)
+
 def validateCount(algidx):
     valid = True
     count = simpledialog.askstring("tk", "How many random elements should be generated")
@@ -467,10 +519,16 @@ def validateCount(algidx):
         algData = []
         visCanvas.delete("all")
         for _ in range(count):
-            algData.append(random.randint(1, 25))
+            if algidx == 6:
+                algData.append(random.randint(1, 9999))
+            else:
+                algData.append(random.randint(1, 50))
 
+        if algidx < 6:
+            setupCanvas(algData)
+        if algidx == 6:
+            setupRadix(algData)
 
-        setupCanvas(algData)
         if "startButton" in externalButtons:
             externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
 
@@ -493,14 +551,19 @@ def validateData(userInput, algidx):
     if data != None:
         algData = data  
         visCanvas.delete("all")
-        setupCanvas(algData)
+
+        if algidx == 6:
+            setupRadix(algData)
+        else:
+            setupCanvas(algData)
+
         if "startButton" in externalButtons:
             externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
 
 def displayAlgInfo(algidx):
-    titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
-    descLabel = ttk.Label(window, text=ALGORITHMS[algidx][1], background="white", anchor="center", font=("Calibri", 20, "bold"), foreground="black")
-    visualiseButton = tk.Button(window, text="visualise!", background="light green", font=("Calibri", 20, "bold"), command=lambda idx=algidx: initialiseVisualisation(idx))
+    titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
+    descLabel = ttk.Label(window, text=ALGORITHMS[algidx][1], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
+    visualiseButton = tk.Button(window, text="visualise!", background="light green", font=("Roboto Mono", 20, "bold"), command=lambda idx=algidx: initialiseVisualisation(idx))
 
     titleLabel.grid(row=1, column=1, sticky="nesw")
     descLabel.grid(row=2, column=1, sticky="nesw", rowspan=window.grid_size()[1] - 4)
@@ -541,12 +604,15 @@ def startAlgorithm(algIdx, data):
         swapList = Algorithms.mergeStart(data, [], 0, len(data) - 1)
     elif algIdx == 5:
         swapList = Algorithms.quick(data, [], 0, len(data) - 1)
+    elif algIdx == 6:
+        swapList = Algorithms.Radix(data)
 
     if algIdx <= 1:
         searchVisualisation(data, pointerList, value, 0)
-    if algIdx >= 2 and algIdx <= 6:
+    if algIdx >= 2 and algIdx <= 5:
         moveBars(swapList, 0, 0, [], [], rectIdData, False)
-    
+    if algIdx == 6:
+        radixVisualisation(data, swapList)
 
 initialiseHome()
 window.mainloop()

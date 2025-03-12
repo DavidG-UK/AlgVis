@@ -118,9 +118,8 @@ def quick(data, swapList, lowValue, highValue):
     return swapList
 
 def Radix(data):
-    buckets = []
-    for i in range(10):
-        buckets.append([])
+    moveList = []
+    buckets = [[] for _ in range(10)]
 
     digitCount = len(str(max(data)))
 
@@ -131,6 +130,7 @@ def Radix(data):
         for j in range(len(data)):
             digit = int(data[j][i - 1])
             buckets[digit].append(data[j])
+            moveList.append([[j, digit], "move in"])
 
         data = []
         popIndex = 0
@@ -138,10 +138,11 @@ def Radix(data):
         while popIndex != 10:
             for j in range(len(buckets[popIndex])):
                 data.append(buckets[popIndex][j])
+                moveList.append([[popIndex, digit], "move out"])
             buckets[popIndex] = []
             popIndex += 1
         
-    return data
+    return moveList
 
 def dijkstra(adjMatrix, root, goal):
     nodeTable = []
