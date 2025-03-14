@@ -385,6 +385,7 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
 
         if index < len(aPositions):
             bars = [idOrder[swapList[swapIndex][0][1]], idOrder[swapList[swapIndex][0][0]]] 
+            print(bars[0])
             visCanvas.move(bars[0], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
             visCanvas.move(bars[1], aPositions[index][0] - visCanvas.coords(bars[1])[0], aPositions[index][1] - visCanvas.coords(bars[1])[3])
             index += 1
@@ -456,7 +457,9 @@ def setupRadix(data):
     global visCanvas
     SPACING = 10
     padX = 100
-    rectIdData.clear()
+    textIdData.clear()
+    bucketIdData.clear()
+    defaultRadixPositions.clear()
     
     availableSpace = MAXSCREENWIDTH - (2 * padX)
     textLength = len(str(max(data)))
@@ -482,27 +485,35 @@ def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets):
     if timePause == 0:
         timePause = 1
     
-    textX, textY = visCanvas.coords(swapList[swapIndex][0][0])[0], visCanvas.coords(swapList[swapIndex][0][0])[1]
-    if stages == []:
-        stages = animateMove(swapList[swapIndex], len(data), len(buckets[swapList[swapIndex][0][1]]), (swapIndex % len(data)) if swapIndex != 0 else len(data))
-
-    if stageIndex == len(stages):
-        visCanvas.after(timePause * 100, radixVisualisation, data, swapList, swapIndex + 1, stageIndex, stages, buckets)
-
-    visCanvas.move(swapList[swapIndex][0][0], stages[stageIndex][0] - textX, stages[stageIndex][1] - textY)
-    if stageIndex + 1 == len(stages):
-        if swapList[swapIndex][1] == "move in":
-            buckets[swapList[swapIndex][0][1]].append(swapList[swapIndex][0][0])
-        else:
-            del buckets[swapList[swapIndex][0][1]][0]
-        visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex + 1, 0, [], buckets)
+    if swapIndex == len(swapList):
+        for obj in textIdData:
+            visCanvas.itemconfig(obj, fill="green")
     else:
-        visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex, stageIndex + 1, stages, buckets)
+        print(swapList[swapIndex][0][0])
+        print(visCanvas.find_all())
+        print(textIdData)
+        textX, textY = visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[0], visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[1]
+        if stages == []:
+            stages = animateMove(swapList[swapIndex], len(data), len(buckets[swapList[swapIndex][0][1]]), (swapIndex % len(data)) if swapIndex != 0 else len(data))
+
+        if stageIndex == len(stages):
+            visCanvas.after(timePause * 100, radixVisualisation, data, swapList, swapIndex + 1, stageIndex, stages, buckets)
+
+        visCanvas.move(textIdData[swapList[swapIndex][0][0] - 1], stages[stageIndex][0] - textX, stages[stageIndex][1] - textY)
+        if stageIndex + 1 == len(stages):
+            if swapList[swapIndex][1] == "move in":
+                buckets[swapList[swapIndex][0][1]].append(textIdData[swapList[swapIndex][0][0] - 1])
+            else:
+                del buckets[swapList[swapIndex][0][1]][0]
+            visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex + 1, 0, [], buckets)
+        else:
+            visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex, stageIndex + 1, stages, buckets)
 
 def animateMove(event, dataSize, bucketSize, dataLength):
     print(visCanvas.find_all(), visCanvas.coords(event[0][0]))
-    textX, textY = visCanvas.coords(event[0][0])[0], visCanvas.coords(event[0][0])[1]
-    bucketX, bucketY = visCanvas.coords(event[0][1] + dataSize + 1)[0], visCanvas.coords(event[0][1] + dataSize + 1)[1] - 20 - (30 * bucketSize)
+    textX, textY = visCanvas.coords(textIdData[event[0][0] - 1])[0], visCanvas.coords(textIdData[event[0][0] - 1])[1]
+    print(bucketIdData)
+    bucketX, bucketY = visCanvas.coords(event[0][1] + bucketIdData[0])[0], visCanvas.coords(event[0][1] + bucketIdData[0])[1] - 20 - (30 * bucketSize)
     stages = []
     
     if event[1] == "move in":
