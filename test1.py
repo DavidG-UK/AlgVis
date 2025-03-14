@@ -1,47 +1,9 @@
-def partition(arr, low, high):
-    i = (low - 1)         # index of smaller element
-    pivot = arr[high]     # pivot
+import networkx as nx
+import matplotlib.pyplot as mpl
 
-    for j in range(low, high):
+g = nx.Graph()
+g.add_edge(1, 2, weight=80)
+g.add_node(3)
 
-        # If current element is smaller 
-        # than or equal to pivot
-        if arr[j] <= pivot:
-        
-            # increment index of
-            # smaller element
-            i += 1
-            arr[i], arr[j] = arr[j], arr[i]
-
-    arr[i + 1], arr[high] = arr[high], arr[i + 1]
-    return (i + 1)
-
-# The main function that implements QuickSort
-# arr[] --> Array to be sorted,
-# low --> Starting index,
-# high --> Ending index
-
-# Function to do Quick sort
-def quickSort(arr, low, high):
-    if low < high:
-
-        # pi is partitioning index, arr[p] is now
-        # at right place
-        pi = partition(arr, low, high)
-
-        # Separately sort elements before
-        # partition and after partition
-        quickSort(arr, low, pi-1)
-        quickSort(arr, pi + 1, high)
-
-# Driver Code
-if __name__ == '__main__' :
-    
-    arr = [1, 35, 35, 22, 43, 39, 23, 47, 9, 8, 18, 27, 47, 13, 22, 43, 16, 16, 37, 30, 42, 26, 17, 39, 49, 13, 26, 11, 34, 46]
-    n = len(arr)
-    
-    # Calling quickSort function
-    quickSort(arr, 0, n - 1)
-    
-    for i in range(n):
-        print(arr[i], end = " ")
+nx.draw_spring(g, with_labels=True)
+mpl.show()

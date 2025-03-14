@@ -117,28 +117,29 @@ def quick(data, swapList, lowValue, highValue):
 
     return swapList
 
-def Radix(data):
+def Radix(data, idOrder):
+    idData = []
+
     moveList = []
     buckets = [[] for _ in range(10)]
-
     digitCount = len(str(max(data)))
 
     for i in range(len(data)):
-        data[i] = str(data[i]).rjust(digitCount, "0")
+        idData.append([str(data[i]).rjust(digitCount, "0"), (i+1)])
     
     for i in range(digitCount, 0, -1):
-        for j in range(len(data)):
-            digit = int(data[j][i - 1])
-            buckets[digit].append(data[j])
-            moveList.append([[j, digit], "move in"])
+        for j in range(len(idData)):
+            digit = int(idData[j][0][i - 1])
+            buckets[digit].append(idData[j])
+            moveList.append([[idData[j][1], digit], "move in"])
 
-        data = []
+        idData = []
         popIndex = 0
 
         while popIndex != 10:
             for j in range(len(buckets[popIndex])):
-                data.append(buckets[popIndex][j])
-                moveList.append([[popIndex, digit], "move out"])
+                idData.append(buckets[popIndex][j])
+                moveList.append([[buckets[popIndex][j][1], popIndex], "move out"])
             buckets[popIndex] = []
             popIndex += 1
         

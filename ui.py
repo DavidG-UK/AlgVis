@@ -2,6 +2,8 @@ import random
 import math
 import Algorithms
 import tkinter as tk
+import networkx as nx
+import matplotlib as mpl
 from tkinter import ttk
 from tkinter import simpledialog
 from tkinter import messagebox
@@ -20,6 +22,7 @@ tutButtons = [None, None, None]
 rectIdData = []
 bucketIdData = []
 textIdData = []
+defaultRadixPositions = []
 externalButtons = {}
 speed = 1
 
@@ -466,33 +469,112 @@ def setupRadix(data):
         allocatedCharLength = int(bucketSpace / textLength)
 
     for i in range(len(data)):
-        textIdData.append(visCanvas.create_text(padX + (textLength * allocatedCharLength * i) + (SPACING * i), MAXSCREENHEIGHT - 300, text=str(data[i]).rjust(textLength, "0"), fill="black", font=("Roboto Mono", allocatedCharLength)))
+        x, y = padX + (textLength * allocatedCharLength * i) + (SPACING * i), MAXSCREENHEIGHT - 300
+        defaultRadixPositions.append([x, y])
+        textIdData.append(visCanvas.create_text(x, y, text=str(data[i]).rjust(textLength, "0"), fill="black", font=("Roboto Mono", allocatedCharLength)))
     
     for i in range(10):
         bucketIdData.append(visCanvas.create_text(padX + (bucketSpace * i) + (SPACING * i), MAXSCREENHEIGHT - SPACING, text = str(i), fill="black", font=("Roboto Mono", 15)))
     
-def radixVisualisation(data, swapList):
-    idOrder = [i for i in range(len(data))]
-    buckets = [[] * 10]
-
-    for event in swapList:
-        if event[1] == "move in":
-            stages = animateMove(event, idOrder)
-            # for stage in stages:
-            #     pass
-                #visCanvas.move(idOrder[event[0][0]], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
-
-def animateMove(event, idOrder):
-    print(visCanvas.find_all(), visCanvas.coords(idOrder[event[0][0]] + 1))
-    textX, textY = visCanvas.coords(idOrder[event[0][0]] + 1)[0], visCanvas.coords(idOrder[event[0][0]] + 1)[1]
-    bucketX, bucketY = visCanvas.coords(event[0][1] + max(idOrder) + 1)[0], visCanvas.coords(event[0][1]+ max(idOrder) + 1)[1]
-
-    if abs(bucketX - textX) > abs(bucketY - textY):
-        totalStages = math.ceil(abs(bucketX - textX)) / 5
-    else:
-        totalStages = math.ceil(abs(bucketY - textY)) / 5
+def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets):
+    global visCanvas, speed
+    timePause = int(14/speed)
+    if timePause == 0:
+        timePause = 1
     
-    print(textX)
+    textX, textY = visCanvas.coords(swapList[swapIndex][0][0])[0], visCanvas.coords(swapList[swapIndex][0][0])[1]
+    if stages == []:
+        stages = animateMove(swapList[swapIndex], len(data), len(buckets[swapList[swapIndex][0][1]]), (swapIndex % len(data)) if swapIndex != 0 else len(data))
+
+    if stageIndex == len(stages):
+        visCanvas.after(timePause * 100, radixVisualisation, data, swapList, swapIndex + 1, stageIndex, stages, buckets)
+
+    visCanvas.move(swapList[swapIndex][0][0], stages[stageIndex][0] - textX, stages[stageIndex][1] - textY)
+    if stageIndex + 1 == len(stages):
+        if swapList[swapIndex][1] == "move in":
+            buckets[swapList[swapIndex][0][1]].append(swapList[swapIndex][0][0])
+        else:
+            del buckets[swapList[swapIndex][0][1]][0]
+        visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex + 1, 0, [], buckets)
+    else:
+        visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex, stageIndex + 1, stages, buckets)
+
+def animateMove(event, dataSize, bucketSize, dataLength):
+    print(visCanvas.find_all(), visCanvas.coords(event[0][0]))
+    textX, textY = visCanvas.coords(event[0][0])[0], visCanvas.coords(event[0][0])[1]
+    bucketX, bucketY = visCanvas.coords(event[0][1] + dataSize + 1)[0], visCanvas.coords(event[0][1] + dataSize + 1)[1] - 20 - (30 * bucketSize)
+    stages = []
+    
+    if event[1] == "move in":
+        destX, destY = bucketX, bucketY
+    else:
+        destX, destY = defaultRadixPositions[dataLength][0], defaultRadixPositions[dataLength][1]
+
+    if destX - textX >= 0:
+        moveX = 5
+    else:
+        moveX = -5
+    
+    if destY - textY >= 0:
+        moveY = 5
+    else:
+        moveY = -5
+
+    if event[1] == "move in":
+        for _ in range(10):
+            textY += moveY
+            stages.append([textX, textY])
+
+        xStages, textX, textY = radixX(textX, destX, moveX, textY)
+        for stage in xStages:
+            stages.append(stage)
+        yStages, textX, textY = radixY(textY, destY, moveY, textX)
+        for stage in yStages:
+            stages.append(stage)
+    
+    else:
+        yStages, textX, textY = radixY(textY, destY, moveY, textX)
+        for stage in yStages:
+            stages.append(stage)
+        xStages, textX, textY = radixX(textX, destX, moveX, textY)
+        for stage in xStages:
+            stages.append(stage)
+    
+    return stages
+
+def radixX(textX, destX, moveX, textY):
+    stages = []
+    while textX != destX:
+        reachedLimit = False
+        if textX + moveX >= destX and moveX >= 0:
+            reachedLimit = True
+        elif textX + moveX <= destX and moveX <= 0:
+            reachedLimit = True  
+
+        if reachedLimit:
+            textX = destX       
+        elif textX + moveX != destX:
+            textX += moveX
+        
+        stages.append([textX, textY])
+    return stages, textX, textY
+
+def radixY(textY, destY, moveY, textX):
+    stages = []
+    while textY != destY:
+        reachedLimit = False
+        if textY + moveY >= destY and moveY >= 0:
+            reachedLimit = True
+        elif textY + moveY <= destY and moveY <= 0:
+            reachedLimit = True   
+
+        if reachedLimit:
+            textY = destY
+        elif textY + moveY != destY:
+            textY += moveY
+
+        stages.append([textX, textY])
+    return stages, textX, textY
 
 def validateCount(algidx):
     valid = True
@@ -605,14 +687,14 @@ def startAlgorithm(algIdx, data):
     elif algIdx == 5:
         swapList = Algorithms.quick(data, [], 0, len(data) - 1)
     elif algIdx == 6:
-        swapList = Algorithms.Radix(data)
+        swapList = Algorithms.Radix(data, textIdData)
 
     if algIdx <= 1:
         searchVisualisation(data, pointerList, value, 0)
     if algIdx >= 2 and algIdx <= 5:
         moveBars(swapList, 0, 0, [], [], rectIdData, False)
     if algIdx == 6:
-        radixVisualisation(data, swapList)
+        radixVisualisation(data, swapList, 0, 0, [], [[] for _ in range(10)])
 
 initialiseHome()
 window.mainloop()

@@ -1,37 +1,30 @@
-import time
-import threading
-from tkinter import * 
-root = Tk()
-root.title("Loop Terminate")
+import tkinter as tk
 
-time.sleep(0.5)
+root = tk.Tk()
 
-stop = False
+c = tk.Canvas(root)
+c.pack(expand=1, fill=tk.BOTH)
 
-def button_stop_command():
-  # If the STOP button is pressed then terminate the loop
-  global stop
-  stop = True
+words = '''I am writing a program that involves displaying some text in a create_text() box on a Tkinter canvas, within a loop. Each word is displayed, then replaced by the next. Sort of like flash cards. I need to color one letter of each word, close to the middle of the word, so that when the user is reading the words their eyes focus on the middle of the word. So if len(i)=1, color i[0], if len(i)>= 2 and <= 5, color i[1], and so on. It needs to be done using the Canvas, and using canvas.create_text(text = i[focus_index],fill = 'red') The result should print like this exaMple (but obviously "m" would be colored red, not be uppercase)'''
+words = words.split()
 
-def button_start_command():
-  global stop
-  stop = False
-  j = 1
-  while j <= 20 and not stop:
-    print("Loop Index = " + str(j))
-    time.sleep(1)
-    j = j+1
+def new_word(i):
+    if i == len(words):
+        i = 0
 
-def button_starter():
-  t = threading.Thread(target=button_start_command)
-  t.start()
+    word = words[i]
+    middle = (len(word)+1)//2
+    c.itemconfigure(t1, text=word[:middle-1]+' ')
+    c.itemconfigure(t2, text=word[middle-1:middle])
+    c.itemconfigure(t3, text=word[middle:])
 
-# Button START
-button_start = Button(root, text="START", padx=30, pady=20, command=button_starter)
-button_start.grid(columnspan=1, row=1,column=0)
+    root.after(100, lambda: new_word(i+1))
 
-# Button STOP
-button_stop = Button(root, text="STOP", padx=33, pady=20, command=button_stop_command)
-button_stop.grid(row=2, column=0)
 
+t1 = c.create_text(200,100,text='', anchor='e', font=("Courier", 25))
+t2 = c.create_text(200,100,text='', anchor='e', font=("Courier", 25), fill='red')
+t3 = c.create_text(200,100,text='', anchor='w', font=("Courier", 25))
+new_word(0)
+
+root.geometry('400x200+200+200')
 root.mainloop()
