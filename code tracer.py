@@ -17,21 +17,21 @@ def traceLines(frame, event, arg):
         time.sleep(0.5)
     return traceLines
 
-def estimate_On(numLines, dataInput):
-    elementCount = dataInput
-    complexities = [
-        [1, "O(1)"],
-        [math.log(elementCount), "O(log(n))"],
-        [elementCount, "O(n)"],
-        [elementCount * math.log(elementCount), "O(nlog(n)))"],
-        [elementCount ** 2, "O(n²)"],
-        [elementCount ** 3, "O(n³)"],
-        [math.factorial(elementCount), "O(n!)"]
-    ]
+# def estimate_On(numLines, dataInput):
+#     elementCount = dataInput
+#     complexities = [
+#         [1, "O(1)"],
+#         [math.log(elementCount), "O(log(n))"],
+#         [elementCount, "O(n)"],
+#         [elementCount * math.log(elementCount), "O(nlog(n)))"],
+#         [elementCount ** 2, "O(n²)"],
+#         [elementCount ** 3, "O(n³)"],
+#         [math.factorial(elementCount), "O(n!)"]
+#     ]
 
-    for i in range(len(complexities)):
-        if numLines < complexities[i][0]:
-            return complexities[i]
+#     for i in range(len(complexities)):
+#         if numLines < complexities[i][0]:
+#             return complexities[i]
 
 N = 5
 adjMatrix = Algorithms.generateMatrix(N)

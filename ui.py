@@ -21,6 +21,7 @@ rectIdData = []
 bucketIdData = []
 textIdData = []
 defaultRadixPositions = []
+lineLabels = []
 defaultData = [[12, 17, 6, 2, 5, 5, 8, 13, 12, 3, 15, 4], [6753, 1476, 9517, 5249, 2584, 8462, 6753, 6038, 1069, 2988, 6968, 8339]]
 
 externalButtons = {}
@@ -110,7 +111,6 @@ def displayTutorial(stage):
                  "To change the speed and data used in the algorithm, you can edit the taskbar as shown", 
                  "To view the algorithm you selected, click the play button and watch the visualisation",
                  "You can also view some additional information beneath the visualisation plane. You can \nturn these displays on or off in the options menu",
-                 "graph",
                  "good luck and have fun!"]
 
     window.columnconfigure((0, 3), weight=1, uniform="f")
@@ -175,7 +175,7 @@ def displayTutorial(stage):
     if stage == 4:
         pass
         # do when visualisation is complete
-    if stage == 6: # end
+    if stage == 5: # end
         tutFrame.rowconfigure(0, weight=1, uniform="l")
         tutFrame.columnconfigure(0, weight=1, uniform="l")
         smileLabel = ttk.Label(tutFrame, text=":D", background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
@@ -198,6 +198,15 @@ def initialiseAlgSelect():
     for i in range(len(ALGORITHMS)):
         algButtons.append(tk.Button(window, text=ALGORITHMS[i][0], background="light blue", foreground="black", font=("Roboto Mono", 14, "bold"), command=lambda idx=i: displayAlgInfo(idx)))
         algButtons[i].grid(row=i+1, column=0, sticky="nesw")
+
+def displayAlgInfo(algidx):
+    titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
+    descLabel = ttk.Label(window, text=ALGORITHMS[algidx][1], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
+    visualiseButton = tk.Button(window, text="Visualise!" if algidx <= 6 else "Coming soon", background="light green" if algidx <= 6 else "#CBC3E3", font=("Roboto Mono", 20, "bold"), command=lambda idx=algidx: initialiseVisualisation(idx) if algidx <= 6 else None)
+
+    titleLabel.grid(row=1, column=1, sticky="nesw")
+    descLabel.grid(row=2, column=1, sticky="nesw", rowspan=window.grid_size()[1] - 4)
+    visualiseButton.grid(row=window.grid_size()[1] - 2, column=1, sticky="nesw", rowspan=2)
 
 def initialiseVisualisation(algidx):
     global visCanvas
@@ -232,16 +241,7 @@ def initialiseVisualisation(algidx):
     visCanvas.grid(row=1, column=0, sticky="nesw", columnspan=4)
 
     if options[0][1] == True: # display of optional featres
-        codeFrame = tk.Frame(window)
-        lineLabels = []
-        codeFrame.columnconfigure(0, weight=1, uniform="f")
-        codeFrame.rowconfigure((0, 1, 2, 3, 4, 5, 6, 7), weight=1, uniform="f")
-        currentLine = "placeholder text"
-        for i in range(8):
-            lineLabels.append(ttk.Label(codeFrame, text=currentLine, background="white", anchor="center", font=("Roboto Mono", 14), foreground="black"))
-            lineLabels[i].grid(row=i, column=0, sticky="nesw")
-
-        codeFrame.grid(row=2, column=3, rowspan=2, sticky="nesw")
+        updateCodeFrame([])
 
     if options[1][1] == True:
         onLabel = ttk.Label(window, text=ALGORITHMS[algidx][2], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
@@ -251,16 +251,35 @@ def initialiseVisualisation(algidx):
         onDescLabel = ttk.Label(window, text=ALGORITHMS[algidx][3], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
         onDescLabel.grid(row=3, column=0, columnspan=2, sticky="nesw")
 
+def updateCodeFrame(lineLabels):
+    codeFrame = tk.Frame(window)
+    codeFrame.columnconfigure(0, weight=1, uniform="f")
+    codeFrame.rowconfigure((0, 1, 2, 3, 4, 5, 6, 7), weight=1, uniform="f")
+
+    if options[0][1] == True and lineLabels != []: 
+        for i in range(len(lineLabels)):
+            ttk.Label(codeFrame, text=lineLabels[i], background="white", anchor="center", font=("Roboto Mono", 10, "bold"), foreground="black").grid(row=i, column=0, sticky="nesw")
+
+    codeFrame.grid(row=2, column=3, rowspan=2, sticky="nesw")
+
+def updateLineLabels(data):
+    global lineLabels
+
+    if data == None:
+        lineLabels = []
+
+    if len(lineLabels) >= 8:
+        lineLabels.pop()
+    lineLabels.insert(0, data)
+
+    updateCodeFrame(lineLabels)
+
 def displayBack(backScreen, xyAlignment):
     if backScreen == "home":
         backButton = tk.Button(window, text="back", background="white", font=("Roboto Mono", 14, "bold"), command=initialiseHome)
     elif backScreen == "algSelect":
         backButton = tk.Button(window, text="back", background="white", font=("Roboto Mono", 14, "bold"), command=initialiseAlgSelect)
     backButton.grid(row=0, column=0, sticky=xyAlignment)
-
-def updateSpeed(event):
-    global speedScale, speed
-    speed = speedScale.get()
 
 def createTaskbar(active, algidx, master, algData):
     global speedScale, speed
@@ -299,6 +318,10 @@ def createTaskbar(active, algidx, master, algData):
 
     return taskFrame
 
+def updateSpeed(event):
+    global speedScale, speed
+    speed = speedScale.get()
+    
 def pauseAlgorithm():
     global inProgress
     inProgress = False
@@ -321,9 +344,11 @@ def restartAlgortihm(algidx):
     startAlgorithm(algidx, data)
 
 def setupCanvas(data):
-    global visCanvas, inProgress
+    global visCanvas, inProgress, lineLabels
     
     inProgress = False
+    lineLabels = []
+    updateCodeFrame([])
 
     padX = 50
     rectIdData.clear()
@@ -381,13 +406,19 @@ def searchVisualisation(data, pointerList, value, pointerIndex, algidx):
 
         if pointerIndex == len(pointerList) - 1:
             if data[pointerList[pointerIndex]] == value:
+                updateLineLabels("Element found, ending algorithm")
                 visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="light green")
                 endAlgorithm(algidx)
             else:
+                updateLineLabels("Element not found in list, ending algorithm")
                 for i in range(len(data)):
                     visCanvas.itemconfig(rectIdData[i], fill="red")
                 endAlgorithm(algidx)
         else:
+            if algidx == 0:
+                updateLineLabels("Checking next element")
+            else:
+                updateLineLabels("Discarding larger half, checking next element")
             visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="red")
             pointerIndex += 1
             visCanvas.after(timePause * 100, searchVisualisation, data, pointerList, value, pointerIndex, algidx)
@@ -405,6 +436,7 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
 
     if inProgress == True:
         if swapIndex == len(swapList):
+            updateLineLabels("List is sorted, ending algorithm")
             for obj in idOrder:
                 visCanvas.itemconfig(obj, fill="light green")
             endAlgorithm(algidx)
@@ -413,12 +445,14 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
             for obj in idOrder:
                 visCanvas.itemconfig(obj, fill="")
 
+            updateLineLabels("Selecting pointer")
             for i in range(len(swapList[swapIndex][0])):
                 visCanvas.itemconfig(idOrder[swapList[swapIndex][0][i]], fill='red')
             visCanvas.after(timePause * 150, moveBars, swapList, swapIndex + 1, 0, bPositions, aPositions, idOrder, False, algidx)
         
         else:
             if aPositions == []:
+                updateLineLabels("Swapping elements")
                 bPositions, aPositions, idOrder = createStages(swapList, swapIndex, rectIdData)
 
             visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='light blue')
@@ -438,6 +472,7 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
                     visCanvas.itemconfig(idOrder[swapList[swapIndex][0][0]], fill='')
 
                     if swapIndex < len(swapList):
+                        updateLineLabels("Starting next swap")
                         swapIndex += 1
                         visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, [], [], idOrder, False, algidx)     
 
@@ -499,9 +534,11 @@ def createStages(swapList, swapIndex, idOrder):
     return aStages, bStages, idOrder
 
 def setupRadix(data):
-    global visCanvas, inProgress
+    global visCanvas, inProgress, lineLabels
 
     inProgress = False
+    lineLabels = []
+    updateCodeFrame([])
 
     SPACING = 10
     padX = 100
@@ -532,26 +569,31 @@ def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets, a
     timePause = int(14/speed)
     if timePause == 0:
         timePause = 1
-    
+
+    if swapIndex == 0 and stageIndex == 0:
+        updateLineLabels("Moving element into bucket " + str(swapList[0][0][1]))
+
     if inProgress == True:
         if swapIndex == len(swapList):
+            updateLineLabels("List is sorted, ending algorithm")
             for obj in textIdData:
                 visCanvas.itemconfig(obj, fill="green")
+
                 endAlgorithm(algidx)
         else:
             textX, textY = visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[0], visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[1]
             if stages == []:
                 stages = animateMove(swapList[swapIndex], len(data), len(buckets[swapList[swapIndex][0][1]]), (swapIndex % len(data)) if swapIndex != 0 else len(data))
 
-            if stageIndex == len(stages):
-                visCanvas.after(timePause * 100, radixVisualisation, data, swapList, swapIndex + 1, stageIndex, stages, buckets, algidx)
-
             visCanvas.move(textIdData[swapList[swapIndex][0][0] - 1], stages[stageIndex][0] - textX, stages[stageIndex][1] - textY)
+
             if stageIndex + 1 == len(stages):
                 if swapList[swapIndex][1] == "move in":
                     buckets[swapList[swapIndex][0][1]].append(textIdData[swapList[swapIndex][0][0] - 1])
+                    updateLineLabels("Moving element into bucket " + str(swapList[swapIndex + 1][0][1]))
                 else:
                     del buckets[swapList[swapIndex][0][1]][0]
+                    updateLineLabels("Dequeuing element in bucket " + str(swapList[swapIndex + 1][0][1]))
                 visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex + 1, 0, [], buckets, algidx)
             else:
                 visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex, stageIndex + 1, stages, buckets, algidx)
@@ -722,15 +764,6 @@ def validateData(userInput, algidx):
     else:
         messagebox.showwarning(message="Please pause the algorithm or wait for it to finish before entering new data")
 
-def displayAlgInfo(algidx):
-    titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
-    descLabel = ttk.Label(window, text=ALGORITHMS[algidx][1], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
-    visualiseButton = tk.Button(window, text="visualise!", background="light green", font=("Roboto Mono", 20, "bold"), command=lambda idx=algidx: initialiseVisualisation(idx))
-
-    titleLabel.grid(row=1, column=1, sticky="nesw")
-    descLabel.grid(row=2, column=1, sticky="nesw", rowspan=window.grid_size()[1] - 4)
-    visualiseButton.grid(row=window.grid_size()[1] - 2, column=1, sticky="nesw", rowspan=2)
-
 def updateButton(buttonIndex):
     if options[buttonIndex][1] == False:
         options[buttonIndex][1] = True
@@ -759,6 +792,7 @@ def startAlgorithm(algIdx, data):
             data = sorted(data)
             visCanvas.delete("all")
             setupCanvas(data)
+            updateLineLabels("Sorting list (prerequisite for binary search)")
             pointerList, value = Algorithms.binary(data, value)
         if algIdx == 2:
             swapList = Algorithms.bubble(data)
