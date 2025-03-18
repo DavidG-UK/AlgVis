@@ -13,8 +13,6 @@ timeBeginPeriod = windll.winmm.timeBeginPeriod
 timeBeginPeriod(1)
 
 window = tk.Tk()
-# w, h = window.winfo_screenwidth(), window.winfo_screenheight()
-# window.geometry("%dx%d+0+0" % (w, h))
 window.state("zoomed")
 
 window.configure(background="black")
@@ -23,8 +21,12 @@ rectIdData = []
 bucketIdData = []
 textIdData = []
 defaultRadixPositions = []
+defaultData = [[12, 17, 6, 2, 5, 5, 8, 13, 12, 3, 15, 4], [6753, 1476, 9517, 5249, 2584, 8462, 6753, 6038, 1069, 2988, 6968, 8339]]
+
 externalButtons = {}
 speed = 1
+inProgress = False
+newData = False
 
 MAXSCREENWIDTH = 1300
 MAXSCREENHEIGHT = 400
@@ -201,8 +203,7 @@ def initialiseVisualisation(algidx):
     global visCanvas
     
     clearScreen(True) # removes all formatting and widgets
-
-    algData = [356, 1293, 5544, 3298, 5098, 8812, 3795, 12] # random.randint(1, 50) for _ in range(10)
+    algData = defaultData[0].copy() if algidx != 6 else defaultData[1].copy()
     window.columnconfigure(0, weight=1, uniform="d") 
     window.columnconfigure(1, weight=1, uniform="d")
     window.columnconfigure(2, weight=4, uniform="d")
@@ -272,8 +273,9 @@ def createTaskbar(active, algidx, master, algData):
 
     speedScale = tk.Scale(taskFrame, from_=0.1, to=10, orient="horizontal", variable=speed, command=updateSpeed, label="Execution speed", resolution=0.1)
     speedScale.set(speed)
-    
+
     startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Roboto Mono", 14, "bold"), command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data) if active == True else None) # creating widgets and defining behaviour
+
     externalButtons["startButton"] = startButton
 
     inputFrame = tk.Frame(taskFrame)
@@ -290,14 +292,38 @@ def createTaskbar(active, algidx, master, algData):
     inputButton.grid(row=0, column=0, sticky="nesw") # displaying widgets within frame
     entryBox.grid(row=0, column=1, sticky="nesw")
     randomButton.grid(row=0, column=2, sticky="nesw")
-
-    startButton.grid(row=0, column=0, sticky="nesw")
     speedScale.grid(row=0, column=1, sticky="nesw")
     inputFrame.grid(row=0, column=2, sticky="nesw")
+
+    startButton.grid(row=0, column=0, sticky="nesw")
+
     return taskFrame
 
+def pauseAlgorithm():
+    global inProgress
+    inProgress = False
+    externalButtons["startButton"].config(text = "⏵", command=lambda: resumeAlgorithm())
+
+def resumeAlgorithm():
+    global inProgress
+    inProgress = True
+    externalButtons["startButton"].config(text = "⏸", command=lambda: pauseAlgorithm())
+
+def endAlgorithm(algidx):
+    global inProgress
+    inProgress = False
+    externalButtons["startButton"].config(text = "⟳", command=lambda algIdx = algidx: restartAlgortihm(algIdx))
+
+def restartAlgortihm(algidx):
+    data = defaultData[0].copy() if algidx != 6 else defaultData[1].copy()
+    visCanvas.delete("all")
+    setupCanvas(data)
+    startAlgorithm(algidx, data)
+
 def setupCanvas(data):
-    global visCanvas
+    global visCanvas, inProgress
+    
+    inProgress = False
 
     padX = 50
     rectIdData.clear()
@@ -320,8 +346,13 @@ def setupCanvas(data):
         posCoords.append([x, y, xWid, yWid])
 
 def verifySearchValue():
+    global inProgress
     value = simpledialog.askstring("tk", "What is the value of the element you wish to search for")
 
+    if inProgress == True:
+        messagebox.showwarning(message="Please pause the algorithm or wait for it to finish before entering a search value")
+        return None
+    
     if value == None:
         return None
     
@@ -337,69 +368,83 @@ def verifySearchValue():
     
     return value
     
-def searchVisualisation(data, pointerList, value, pointerIndex):
-    global visCanvas, speed
+def searchVisualisation(data, pointerList, value, pointerIndex, algidx):
+    global visCanvas, speed, newData
 
     timePause = int(14/speed)
     if timePause == 0:
         timePause = 1
 
-    for i in range(len(data)):
-        visCanvas.itemconfig(rectIdData[i], fill="")
+    if inProgress == True:
+        for i in range(len(data)):
+            visCanvas.itemconfig(rectIdData[i], fill="")
 
-    if pointerIndex == len(pointerList) - 1:
-        if data[pointerList[pointerIndex]] == value:
-            visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="light green")
-        else:
-            for i in range(len(data)):
-                visCanvas.itemconfig(rectIdData[i], fill="red")
-    else:
-        visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="red")
-        pointerIndex += 1
-        visCanvas.after(timePause * 100, searchVisualisation, data, pointerList, value, pointerIndex)
-
-def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseComplete):
-    global visCanvas, speed
-    timePause = int(14/speed)
-    if timePause == 0:
-        timePause = 1
-
-    if swapIndex == len(swapList):
-        for obj in idOrder:
-            visCanvas.itemconfig(obj, fill="light green")
-
-    elif swapList[swapIndex][1] == "pointer":         
-        for obj in idOrder:
-            visCanvas.itemconfig(obj, fill="")
-
-        for i in range(len(swapList[swapIndex][0])):
-            visCanvas.itemconfig(idOrder[swapList[swapIndex][0][i]], fill='red')
-        visCanvas.after(timePause * 150, moveBars, swapList, swapIndex + 1, 0, bPositions, aPositions, idOrder, False)
-    
-    else:
-        if aPositions == []:
-            bPositions, aPositions, idOrder = createStages(swapList, swapIndex, rectIdData)
-
-        visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='light blue')
-        visCanvas.itemconfig(idOrder[swapList[swapIndex][0][0]], fill='light blue')
-
-        if index < len(aPositions):
-            bars = [idOrder[swapList[swapIndex][0][1]], idOrder[swapList[swapIndex][0][0]]] 
-            print(bars[0])
-            visCanvas.move(bars[0], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
-            visCanvas.move(bars[1], aPositions[index][0] - visCanvas.coords(bars[1])[0], aPositions[index][1] - visCanvas.coords(bars[1])[3])
-            index += 1
-            visCanvas.after(timePause, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, False)
-        else:
-            if not pauseComplete:
-                visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index ,bPositions, aPositions, idOrder, True)
+        if pointerIndex == len(pointerList) - 1:
+            if data[pointerList[pointerIndex]] == value:
+                visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="light green")
+                endAlgorithm(algidx)
             else:
-                visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='')
-                visCanvas.itemconfig(idOrder[swapList[swapIndex][0][0]], fill='')
+                for i in range(len(data)):
+                    visCanvas.itemconfig(rectIdData[i], fill="red")
+                endAlgorithm(algidx)
+        else:
+            visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="red")
+            pointerIndex += 1
+            visCanvas.after(timePause * 100, searchVisualisation, data, pointerList, value, pointerIndex, algidx)
 
-                if swapIndex < len(swapList):
-                    swapIndex += 1
-                    visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, [], [], idOrder, False)         
+    elif newData == False:
+        visCanvas.after(timePause * 20, searchVisualisation, data, pointerList, value, pointerIndex, algidx)
+    else:
+        newData = False
+
+def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseComplete, algidx):
+    global visCanvas, speed, inProgress, newData
+    timePause = int(14/speed)
+    if timePause == 0:
+        timePause = 1
+
+    if inProgress == True:
+        if swapIndex == len(swapList):
+            for obj in idOrder:
+                visCanvas.itemconfig(obj, fill="light green")
+            endAlgorithm(algidx)
+
+        elif swapList[swapIndex][1] == "pointer":         
+            for obj in idOrder:
+                visCanvas.itemconfig(obj, fill="")
+
+            for i in range(len(swapList[swapIndex][0])):
+                visCanvas.itemconfig(idOrder[swapList[swapIndex][0][i]], fill='red')
+            visCanvas.after(timePause * 150, moveBars, swapList, swapIndex + 1, 0, bPositions, aPositions, idOrder, False, algidx)
+        
+        else:
+            if aPositions == []:
+                bPositions, aPositions, idOrder = createStages(swapList, swapIndex, rectIdData)
+
+            visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='light blue')
+            visCanvas.itemconfig(idOrder[swapList[swapIndex][0][0]], fill='light blue')
+
+            if index < len(aPositions):
+                bars = [idOrder[swapList[swapIndex][0][1]], idOrder[swapList[swapIndex][0][0]]] 
+                visCanvas.move(bars[0], bPositions[index][0] - visCanvas.coords(bars[0])[0], bPositions[index][1] - visCanvas.coords(bars[0])[3])
+                visCanvas.move(bars[1], aPositions[index][0] - visCanvas.coords(bars[1])[0], aPositions[index][1] - visCanvas.coords(bars[1])[3])
+                index += 1
+                visCanvas.after(timePause, moveBars, swapList, swapIndex, index, bPositions, aPositions, idOrder, False, algidx)
+            else:
+                if not pauseComplete:
+                    visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index, bPositions, aPositions, idOrder, True, algidx)
+                else:
+                    visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='')
+                    visCanvas.itemconfig(idOrder[swapList[swapIndex][0][0]], fill='')
+
+                    if swapIndex < len(swapList):
+                        swapIndex += 1
+                        visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, [], [], idOrder, False, algidx)     
+
+    elif newData == False:
+        visCanvas.after(timePause * 20, moveBars, swapList, swapIndex, index, bPositions, aPositions, idOrder, False, algidx) 
+    else:
+        newData = False 
 
 def createStages(swapList, swapIndex, idOrder):
     global visCanvas
@@ -454,7 +499,10 @@ def createStages(swapList, swapIndex, idOrder):
     return aStages, bStages, idOrder
 
 def setupRadix(data):
-    global visCanvas
+    global visCanvas, inProgress
+
+    inProgress = False
+
     SPACING = 10
     padX = 100
     textIdData.clear()
@@ -479,40 +527,42 @@ def setupRadix(data):
     for i in range(10):
         bucketIdData.append(visCanvas.create_text(padX + (bucketSpace * i) + (SPACING * i), MAXSCREENHEIGHT - SPACING, text = str(i), fill="black", font=("Roboto Mono", 15)))
     
-def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets):
-    global visCanvas, speed
+def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets, algidx):
+    global visCanvas, speed, inProgress, newData
     timePause = int(14/speed)
     if timePause == 0:
         timePause = 1
     
-    if swapIndex == len(swapList):
-        for obj in textIdData:
-            visCanvas.itemconfig(obj, fill="green")
-    else:
-        print(swapList[swapIndex][0][0])
-        print(visCanvas.find_all())
-        print(textIdData)
-        textX, textY = visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[0], visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[1]
-        if stages == []:
-            stages = animateMove(swapList[swapIndex], len(data), len(buckets[swapList[swapIndex][0][1]]), (swapIndex % len(data)) if swapIndex != 0 else len(data))
-
-        if stageIndex == len(stages):
-            visCanvas.after(timePause * 100, radixVisualisation, data, swapList, swapIndex + 1, stageIndex, stages, buckets)
-
-        visCanvas.move(textIdData[swapList[swapIndex][0][0] - 1], stages[stageIndex][0] - textX, stages[stageIndex][1] - textY)
-        if stageIndex + 1 == len(stages):
-            if swapList[swapIndex][1] == "move in":
-                buckets[swapList[swapIndex][0][1]].append(textIdData[swapList[swapIndex][0][0] - 1])
-            else:
-                del buckets[swapList[swapIndex][0][1]][0]
-            visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex + 1, 0, [], buckets)
+    if inProgress == True:
+        if swapIndex == len(swapList):
+            for obj in textIdData:
+                visCanvas.itemconfig(obj, fill="green")
+                endAlgorithm(algidx)
         else:
-            visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex, stageIndex + 1, stages, buckets)
+            textX, textY = visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[0], visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[1]
+            if stages == []:
+                stages = animateMove(swapList[swapIndex], len(data), len(buckets[swapList[swapIndex][0][1]]), (swapIndex % len(data)) if swapIndex != 0 else len(data))
+
+            if stageIndex == len(stages):
+                visCanvas.after(timePause * 100, radixVisualisation, data, swapList, swapIndex + 1, stageIndex, stages, buckets, algidx)
+
+            visCanvas.move(textIdData[swapList[swapIndex][0][0] - 1], stages[stageIndex][0] - textX, stages[stageIndex][1] - textY)
+            if stageIndex + 1 == len(stages):
+                if swapList[swapIndex][1] == "move in":
+                    buckets[swapList[swapIndex][0][1]].append(textIdData[swapList[swapIndex][0][0] - 1])
+                else:
+                    del buckets[swapList[swapIndex][0][1]][0]
+                visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex + 1, 0, [], buckets, algidx)
+            else:
+                visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex, stageIndex + 1, stages, buckets, algidx)
+    
+    elif newData == True:
+        visCanvas.after(timePause * 20, radixVisualisation, data, swapList, swapIndex, stageIndex, stages, buckets, algidx)
+    else:
+        newData = False
 
 def animateMove(event, dataSize, bucketSize, dataLength):
-    print(visCanvas.find_all(), visCanvas.coords(event[0][0]))
     textX, textY = visCanvas.coords(textIdData[event[0][0] - 1])[0], visCanvas.coords(textIdData[event[0][0] - 1])[1]
-    print(bucketIdData)
     bucketX, bucketY = visCanvas.coords(event[0][1] + bucketIdData[0])[0], visCanvas.coords(event[0][1] + bucketIdData[0])[1] - 20 - (30 * bucketSize)
     stages = []
     
@@ -588,70 +638,89 @@ def radixY(textY, destY, moveY, textX):
     return stages, textX, textY
 
 def validateCount(algidx):
+    global inProgress, newData
     valid = True
-    count = simpledialog.askstring("tk", "How many random elements should be generated")
+    if inProgress == False:
+        count = simpledialog.askstring("tk", "How many random elements should be generated")
 
-    if count == None:
-        return
-    
-    try:
-        count = int(count)
-    except:
-        messagebox.showwarning(message="Please enter a single integer")
-        return None
+        if count == None:
+            return
+        
+        try:
+            count = int(count)
+        except:
+            messagebox.showwarning(message="Please enter a single integer")
+            return None
 
-    if not isinstance(count, int):
-        messagebox.showwarning(message="Please enter a single integer")
-        return None
+        if not isinstance(count, int):
+            messagebox.showwarning(message="Please enter a single integer")
+            return None
 
-    if count < 1 or count > 50:
-        valid = False
-        messagebox.showwarning(message="Please enter a number between 1 and 50")
-    
-    if valid == True:
-        algData = []
-        visCanvas.delete("all")
-        for _ in range(count):
+        if count < 1 or count > 50:
+            valid = False
+            messagebox.showwarning(message="Please enter a number between 1 and 50")
+        
+        if valid == True:
+            algData = []
+            visCanvas.delete("all")
+            for _ in range(count):
+                if algidx == 6:
+                    algData.append(random.randint(1, 9999))
+                    defaultData[1] = algData.copy()
+                else:
+                    algData.append(random.randint(1, 50))
+                    defaultData[0] = algData.copy()
+
+            if algidx < 6:
+                setupCanvas(algData)
             if algidx == 6:
-                algData.append(random.randint(1, 9999))
-            else:
-                algData.append(random.randint(1, 50))
+                setupRadix(algData)
 
-        if algidx < 6:
-            setupCanvas(algData)
-        if algidx == 6:
-            setupRadix(algData)
-
-        if "startButton" in externalButtons:
-            externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
+            if "startButton" in externalButtons:
+                externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
+                newData = True
+    else:
+        messagebox.showwarning(message="Please pause the algorithm or wait for it to finish before entering new data")
 
 def validateData(userInput, algidx):
+    global inProgress, newData
     userInput = userInput.get()
     data = None
-    try:
-        data = list(map(int, userInput.split(" ")))
-    except:
+    if inProgress == False:
         try:
-            data = list(map(int, userInput.split(", ")))
-            messagebox.showwarning(message="In future, please enter data in the form 'x y z'")
+            data = list(map(int, userInput.split(" ")))
         except:
             try:
-                data = list(map(int, userInput.split(",")))
+                data = list(map(int, userInput.split(", ")))
                 messagebox.showwarning(message="In future, please enter data in the form 'x y z'")
             except:
-                messagebox.showwarning(message="entered data could not be read. please enter data in the form 'x y z'")
-    
-    if data != None:
-        algData = data  
-        visCanvas.delete("all")
+                try:
+                    data = list(map(int, userInput.split(",")))
+                    messagebox.showwarning(message="In future, please enter data in the form 'x y z'")
+                except:
+                    messagebox.showwarning(message="entered data could not be read. please enter data in the form 'x y z'")
+        
+        if data != None:
+            algData = data  
 
-        if algidx == 6:
-            setupRadix(algData)
-        else:
-            setupCanvas(algData)
+            if algidx != 6:
+                defaultData[0] = algData.copy()
+            else:
+                defaultData[1] = algData.copy()
 
-        if "startButton" in externalButtons:
-            externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
+            visCanvas.delete("all")
+
+            if algidx == 6:
+                setupRadix(algData)
+            else:
+                setupCanvas(algData)
+
+            if "startButton" in externalButtons:
+                externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
+                newData = True
+
+    else:
+        messagebox.showwarning(message="Please pause the algorithm or wait for it to finish before entering new data")
 
 def displayAlgInfo(algidx):
     titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
@@ -677,35 +746,41 @@ def updateTutButton(bIdx):
         tutButtons[bIdx].config(background="red")
 
 def startAlgorithm(algIdx, data):
-    global speed
+    global speed, inProgress
     pointerList = []
-    if algIdx <= 1:
-        value = verifySearchValue()
-    
-    if algIdx == 0 and value != None:
-        pointerList, value = Algorithms.linear(data, value)
-    if algIdx == 1 and value != None:
-        data = sorted(data)
-        visCanvas.delete("all")
-        setupCanvas(data)
-        pointerList, value = Algorithms.binary(data, value)
-    if algIdx == 2:
-        swapList = Algorithms.bubble(data)
-    elif algIdx == 3:
-        swapList = Algorithms.insertion(data)
-    elif algIdx == 4:
-        swapList = Algorithms.mergeStart(data, [], 0, len(data) - 1)
-    elif algIdx == 5:
-        swapList = Algorithms.quick(data, [], 0, len(data) - 1)
-    elif algIdx == 6:
-        swapList = Algorithms.Radix(data, textIdData)
 
-    if algIdx <= 1:
-        searchVisualisation(data, pointerList, value, 0)
-    if algIdx >= 2 and algIdx <= 5:
-        moveBars(swapList, 0, 0, [], [], rectIdData, False)
-    if algIdx == 6:
-        radixVisualisation(data, swapList, 0, 0, [], [[] for _ in range(10)])
+    if window.tk.call('after', 'info') == "":
+        if algIdx <= 1:
+            value = verifySearchValue()
+
+        if algIdx == 0 and value != None:
+            pointerList, value = Algorithms.linear(data, value)
+        if algIdx == 1 and value != None:
+            data = sorted(data)
+            visCanvas.delete("all")
+            setupCanvas(data)
+            pointerList, value = Algorithms.binary(data, value)
+        if algIdx == 2:
+            swapList = Algorithms.bubble(data)
+        elif algIdx == 3:
+            swapList = Algorithms.insertion(data)
+        elif algIdx == 4:
+            swapList = Algorithms.mergeStart(data, [], 0, len(data) - 1)
+        elif algIdx == 5:
+            swapList = Algorithms.quick(data, [], 0, len(data) - 1)
+        elif algIdx == 6:
+            swapList = Algorithms.Radix(data, textIdData)
+
+        inProgress = True
+
+        if algIdx <= 1:
+            searchVisualisation(data, pointerList, value, 0, algIdx)
+        if algIdx >= 2 and algIdx <= 5:
+            moveBars(swapList, 0, 0, [], [], rectIdData, False, algIdx)
+        if algIdx == 6:
+            radixVisualisation(data, swapList, 0, 0, [], [[] for _ in range(10)], algIdx)
+
+        externalButtons["startButton"].config(text = "⏸", command=lambda: pauseAlgorithm())
 
 initialiseHome()
 window.mainloop()
