@@ -15,33 +15,31 @@ timeBeginPeriod(1)
 window = tk.Tk()
 window.state("zoomed")
 
-window.configure(background="black")
+window.config(background="black")
 tutButtons = [None, None, None]
 rectIdData = []
 bucketIdData = []
 textIdData = []
 defaultRadixPositions = []
-lineLabels = []
 defaultData = [[12, 17, 6, 2, 5, 5, 8, 13, 12, 3, 15, 4], [6753, 1476, 9517, 5249, 2584, 8462, 6753, 6038, 1069, 2988, 6968, 8339]]
 
-externalButtons = {}
+externalWidgets = {}
 speed = 1
 inProgress = False
 newData = False
+options = [["Live Process Display", True, None], ["O(n)", True, None], ["O(n) description", True, None]] #name, enabled, button
 
 MAXSCREENWIDTH = 1300
 MAXSCREENHEIGHT = 400
 MAXBARWIDTH = 100
 MAXBARHEIGHT = 200
-
-options = [["Live Code Display", True, None], ["O(n)", True, None], ["O(n) description", True, None]] #name, enabled, button
-ALGORITHMS = [["Linear Search", "placeholder text", "O(n)", "placeholder text"], #name, desc, O(n), O(n) desc
-              ["Binary Search", "placeholder text", "O(log(n))", "placeholder text"], 
-              ["Bubble Sort", "placeholder text", "O(n²)", "placeholder text"], 
-              ["Insertion Sort", "placeholder text", "O(n²)", "placeholder text"], 
-              ["Merge Sort", "placeholder text", "O(nlog(n))", "placeholder text"], 
-              ["Quick Sort", "placeholder text", "O(nlog(n))", "placeholder text"], 
-              ["Radix Sort", "placeholder text", "O(nd)", "placeholder text"], 
+ALGORITHMS = [["Linear Search", "placeholder text", "O(n)", "Linear search iterates over each element once"], #name, desc, O(n), O(n) desc
+              ["Binary Search", "placeholder text", "O(log(n))", "Binary search is a divide and conquer algorithm"], 
+              ["Bubble Sort", "placeholder text", "O(n²)", "Bubble search has several passes in which it iterates over elements"], 
+              ["Insertion Sort", "placeholder text", "O(n²)", "Insertion sort searches for where to place elements in a sorted list n times (n * n)"], 
+              ["Merge Sort", "placeholder text", "O(nlog(n))", "Merge sort divides the list and then merges them (logn * n)"], 
+              ["Quick Sort", "placeholder text", "O(nlog(n))", "Quick sort partitions the list logn times and then checks each element"], 
+              ["Radix Sort", "placeholder text", "O(nd)", "Radix sort adds each element to a bucket d times (d is number of digits)"], 
               ["Dijkstra's Pathfinding", "placeholder text", "O((V+E)log(V))", "placeholder text"],
               ["A* Pathfinding", "placeholder text", "O(V+E)", "placeholder text"],
               ["Greedy Best First Search", "placeholder text", "O(bᵐ)", "placeholder text"]]
@@ -197,7 +195,8 @@ def initialiseAlgSelect():
 
     for i in range(len(ALGORITHMS)):
         algButtons.append(tk.Button(window, text=ALGORITHMS[i][0], background="light blue", foreground="black", font=("Roboto Mono", 14, "bold"), command=lambda idx=i: displayAlgInfo(idx)))
-        algButtons[i].grid(row=i+1, column=0, sticky="nesw")
+    for j in range(len(algButtons)):
+        algButtons[j].grid(row=j+1, column=0, sticky="nesw")
 
 def displayAlgInfo(algidx):
     titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
@@ -226,12 +225,31 @@ def initialiseVisualisation(algidx):
     taskbar = createTaskbar(True, algidx, window, algData) # calls function to create taskbar frame
     visCanvas = tk.Canvas(window, bg='light grey')
 
+    if options[0][1] == True: # display of optional featres
+        lineLabels = []
+        codeFrame = tk.Frame(window)
+        codeFrame.columnconfigure(0, weight=1, uniform="f")
+        codeFrame.rowconfigure((0, 1, 2, 3, 4, 5, 6, 7), weight=1, uniform="f")
+        for i in range(8):
+            lineLabels.append(ttk.Label(codeFrame, text="", background="white", anchor="center", font=("Roboto Mono", 10, "bold"), foreground="black"))
+            lineLabels[i].grid(row=i, column=0, sticky="nesw")
+
+        externalWidgets["textLabels"] = [lineLabels[i] for i in range(len(lineLabels))]
+        codeFrame.grid(row=2, column=3, rowspan=2, sticky="nesw")
+
+    if options[1][1] == True:
+        onLabel = ttk.Label(window, text=ALGORITHMS[algidx][2], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
+        onLabel.grid(row=2, column=0, rowspan=2 if options[2][1] == False else 1, columnspan=2, sticky="nesw")
+
+    if options[2][1] == True:
+        onDescLabel = ttk.Label(window, text=ALGORITHMS[algidx][3], background="white", anchor="center", font=("Roboto Mono", 10, "bold"), foreground="black")
+        onDescLabel.grid(row=3, column=0, columnspan=2, sticky="nesw")
+
     if algidx <= 5:
         setupCanvas(algData)
     else:
         setupRadix(algData)
 
-    displayBack("algSelect", "nesw")
     gridFrame = ttk.Frame(window)
     gridFrame.rowconfigure(0, weight=1, uniform="k")
     gridFrame.columnconfigure(0, weight=1, uniform="k")
@@ -240,39 +258,18 @@ def initialiseVisualisation(algidx):
     taskbar.grid(row=0, column=1, sticky="nesw", columnspan=3)
     visCanvas.grid(row=1, column=0, sticky="nesw", columnspan=4)
 
-    if options[0][1] == True: # display of optional featres
-        updateCodeFrame([])
+def updatelineText(data):
+    global lineText
+    if options[0][1] == True:
+        if data != None:
+            lineText.insert(0, data)
+            if len(lineText) >= 9:
+                lineText.pop()
+        else: 
+            lineText = ["" for _ in range(8)]
 
-    if options[1][1] == True:
-        onLabel = ttk.Label(window, text=ALGORITHMS[algidx][2], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
-        onLabel.grid(row=2, column=0, rowspan=2 if options[2][1] == False else 1, columnspan=2, sticky="nesw")
-
-    if options[2][1] == True:
-        onDescLabel = ttk.Label(window, text=ALGORITHMS[algidx][3], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
-        onDescLabel.grid(row=3, column=0, columnspan=2, sticky="nesw")
-
-def updateCodeFrame(lineLabels):
-    codeFrame = tk.Frame(window)
-    codeFrame.columnconfigure(0, weight=1, uniform="f")
-    codeFrame.rowconfigure((0, 1, 2, 3, 4, 5, 6, 7), weight=1, uniform="f")
-
-    if options[0][1] == True and lineLabels != []: 
-        for i in range(len(lineLabels)):
-            ttk.Label(codeFrame, text=lineLabels[i], background="white", anchor="center", font=("Roboto Mono", 10, "bold"), foreground="black").grid(row=i, column=0, sticky="nesw")
-
-    codeFrame.grid(row=2, column=3, rowspan=2, sticky="nesw")
-
-def updateLineLabels(data):
-    global lineLabels
-
-    if data == None:
-        lineLabels = []
-
-    if len(lineLabels) >= 8:
-        lineLabels.pop()
-    lineLabels.insert(0, data)
-
-    updateCodeFrame(lineLabels)
+        for i in range(len(externalWidgets["textLabels"])):
+            externalWidgets["textLabels"][i].config(text=lineText[i])
 
 def displayBack(backScreen, xyAlignment):
     if backScreen == "home":
@@ -295,7 +292,9 @@ def createTaskbar(active, algidx, master, algData):
 
     startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Roboto Mono", 14, "bold"), command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data) if active == True else None) # creating widgets and defining behaviour
 
-    externalButtons["startButton"] = startButton
+    externalWidgets["startButton"] = startButton
+
+    displayBack("algSelect", "nesw")
 
     inputFrame = tk.Frame(taskFrame)
 
@@ -313,7 +312,6 @@ def createTaskbar(active, algidx, master, algData):
     randomButton.grid(row=0, column=2, sticky="nesw")
     speedScale.grid(row=0, column=1, sticky="nesw")
     inputFrame.grid(row=0, column=2, sticky="nesw")
-
     startButton.grid(row=0, column=0, sticky="nesw")
 
     return taskFrame
@@ -325,30 +323,29 @@ def updateSpeed(event):
 def pauseAlgorithm():
     global inProgress
     inProgress = False
-    externalButtons["startButton"].config(text = "⏵", command=lambda: resumeAlgorithm())
+    externalWidgets["startButton"].config(text = "⏵", command=lambda: resumeAlgorithm())
 
 def resumeAlgorithm():
     global inProgress
     inProgress = True
-    externalButtons["startButton"].config(text = "⏸", command=lambda: pauseAlgorithm())
+    externalWidgets["startButton"].config(text = "⏸", command=lambda: pauseAlgorithm())
 
 def endAlgorithm(algidx):
     global inProgress
     inProgress = False
-    externalButtons["startButton"].config(text = "⟳", command=lambda algIdx = algidx: restartAlgortihm(algIdx))
+    externalWidgets["startButton"].config(text = "⟳", command=lambda algIdx = algidx: restartAlgortihm(algIdx))
 
 def restartAlgortihm(algidx):
     data = defaultData[0].copy() if algidx != 6 else defaultData[1].copy()
     visCanvas.delete("all")
-    setupCanvas(data)
+    setupCanvas(data) if algidx != 6 else setupRadix(data)
     startAlgorithm(algidx, data)
 
 def setupCanvas(data):
-    global visCanvas, inProgress, lineLabels
+    global visCanvas, inProgress
     
     inProgress = False
-    lineLabels = []
-    updateCodeFrame([])
+    updatelineText(None)
 
     padX = 50
     rectIdData.clear()
@@ -406,19 +403,19 @@ def searchVisualisation(data, pointerList, value, pointerIndex, algidx):
 
         if pointerIndex == len(pointerList) - 1:
             if data[pointerList[pointerIndex]] == value:
-                updateLineLabels("Element found, ending algorithm")
+                updatelineText("Element found, ending algorithm")
                 visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="light green")
                 endAlgorithm(algidx)
             else:
-                updateLineLabels("Element not found in list, ending algorithm")
+                updatelineText("Element not found in list, ending algorithm")
                 for i in range(len(data)):
                     visCanvas.itemconfig(rectIdData[i], fill="red")
                 endAlgorithm(algidx)
         else:
             if algidx == 0:
-                updateLineLabels("Checking next element")
+                updatelineText("Checking next element")
             else:
-                updateLineLabels("Discarding larger half, checking next element")
+                updatelineText("Discarding larger half, checking next element")
             visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="red")
             pointerIndex += 1
             visCanvas.after(timePause * 100, searchVisualisation, data, pointerList, value, pointerIndex, algidx)
@@ -436,7 +433,7 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
 
     if inProgress == True:
         if swapIndex == len(swapList):
-            updateLineLabels("List is sorted, ending algorithm")
+            updatelineText("List is sorted, ending algorithm")
             for obj in idOrder:
                 visCanvas.itemconfig(obj, fill="light green")
             endAlgorithm(algidx)
@@ -445,14 +442,14 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
             for obj in idOrder:
                 visCanvas.itemconfig(obj, fill="")
 
-            updateLineLabels("Selecting pointer")
+            updatelineText("Selecting pointer")
             for i in range(len(swapList[swapIndex][0])):
                 visCanvas.itemconfig(idOrder[swapList[swapIndex][0][i]], fill='red')
             visCanvas.after(timePause * 150, moveBars, swapList, swapIndex + 1, 0, bPositions, aPositions, idOrder, False, algidx)
         
         else:
             if aPositions == []:
-                updateLineLabels("Swapping elements")
+                updatelineText("Swapping elements")
                 bPositions, aPositions, idOrder = createStages(swapList, swapIndex, rectIdData)
 
             visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='light blue')
@@ -472,7 +469,7 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
                     visCanvas.itemconfig(idOrder[swapList[swapIndex][0][0]], fill='')
 
                     if swapIndex < len(swapList):
-                        updateLineLabels("Starting next swap")
+                        updatelineText("Starting next swap")
                         swapIndex += 1
                         visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, [], [], idOrder, False, algidx)     
 
@@ -534,11 +531,10 @@ def createStages(swapList, swapIndex, idOrder):
     return aStages, bStages, idOrder
 
 def setupRadix(data):
-    global visCanvas, inProgress, lineLabels
+    global visCanvas, inProgress
 
     inProgress = False
-    lineLabels = []
-    updateCodeFrame([])
+    updatelineText(None)
 
     SPACING = 10
     padX = 100
@@ -570,15 +566,11 @@ def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets, a
     if timePause == 0:
         timePause = 1
 
-    if swapIndex == 0 and stageIndex == 0:
-        updateLineLabels("Moving element into bucket " + str(swapList[0][0][1]))
-
     if inProgress == True:
         if swapIndex == len(swapList):
-            updateLineLabels("List is sorted, ending algorithm")
+            updatelineText("List is sorted, ending algorithm")
             for obj in textIdData:
                 visCanvas.itemconfig(obj, fill="green")
-
                 endAlgorithm(algidx)
         else:
             textX, textY = visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[0], visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[1]
@@ -590,15 +582,19 @@ def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets, a
             if stageIndex + 1 == len(stages):
                 if swapList[swapIndex][1] == "move in":
                     buckets[swapList[swapIndex][0][1]].append(textIdData[swapList[swapIndex][0][0] - 1])
-                    updateLineLabels("Moving element into bucket " + str(swapList[swapIndex + 1][0][1]))
                 else:
-                    del buckets[swapList[swapIndex][0][1]][0]
-                    updateLineLabels("Dequeuing element in bucket " + str(swapList[swapIndex + 1][0][1]))
+                    del buckets[swapList[swapIndex][0][1]][0]        
                 visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex + 1, 0, [], buckets, algidx)
             else:
                 visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex, stageIndex + 1, stages, buckets, algidx)
-    
-    elif newData == True:
+
+        if stageIndex == 0:
+            if swapList[swapIndex][1] == "move in":
+                updatelineText("Moving element into bucket " + str(swapList[swapIndex][0][1]))
+            else:
+                updatelineText("Moving element out of bucket " + str(swapList[swapIndex][0][1]))
+
+    elif newData == False:
         visCanvas.after(timePause * 20, radixVisualisation, data, swapList, swapIndex, stageIndex, stages, buckets, algidx)
     else:
         newData = False
@@ -718,8 +714,8 @@ def validateCount(algidx):
             if algidx == 6:
                 setupRadix(algData)
 
-            if "startButton" in externalButtons:
-                externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
+            if "startButton" in externalWidgets:
+                externalWidgets["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
                 newData = True
     else:
         messagebox.showwarning(message="Please pause the algorithm or wait for it to finish before entering new data")
@@ -757,8 +753,8 @@ def validateData(userInput, algidx):
             else:
                 setupCanvas(algData)
 
-            if "startButton" in externalButtons:
-                externalButtons["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
+            if "startButton" in externalWidgets:
+                externalWidgets["startButton"].config(command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data))
                 newData = True
 
     else:
@@ -792,7 +788,7 @@ def startAlgorithm(algIdx, data):
             data = sorted(data)
             visCanvas.delete("all")
             setupCanvas(data)
-            updateLineLabels("Sorting list (prerequisite for binary search)")
+            updatelineText("Sorting list (prerequisite for binary search)")
             pointerList, value = Algorithms.binary(data, value)
         if algIdx == 2:
             swapList = Algorithms.bubble(data)
@@ -814,7 +810,7 @@ def startAlgorithm(algIdx, data):
         if algIdx == 6:
             radixVisualisation(data, swapList, 0, 0, [], [[] for _ in range(10)], algIdx)
 
-        externalButtons["startButton"].config(text = "⏸", command=lambda: pauseAlgorithm())
+        externalWidgets["startButton"].config(text = "⏸", command=lambda: pauseAlgorithm())
 
 initialiseHome()
 window.mainloop()
