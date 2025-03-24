@@ -33,16 +33,16 @@ MAXSCREENWIDTH = 1300
 MAXSCREENHEIGHT = 400
 MAXBARWIDTH = 100
 MAXBARHEIGHT = 200
-ALGORITHMS = [["Linear Search", "placeholder text", "O(n)", "Linear search iterates over each\n element once"], #name, desc, O(n), O(n) desc
-              ["Binary Search", "placeholder text", "O(log(n))", "Binary search is a divide and\n conquer algorithm"], 
-              ["Bubble Sort", "placeholder text", "O(n²)", "Bubble search has several\n passes in which it iterates over\n elements"], 
-              ["Insertion Sort", "placeholder text", "O(n²)", "Insertion sort searches for\n where to place elements in\n a sorted list n times (n * n)"], 
-              ["Merge Sort", "placeholder text", "O(nlog(n))", "Merge sort divides the list and\n then merges them (logn * n)"], 
-              ["Quick Sort", "placeholder text", "O(nlog(n))", "Quick sort partitions the list\n logn times and then checks\n each element"], 
-              ["Radix Sort", "placeholder text", "O(nd)", "Radix sort adds each element to\n a bucket d times\n (d is number of digits)"], 
-              ["Dijkstra's Pathfinding", "placeholder text", "O((V+E)log(V))", "placeholder text"],
-              ["A* Pathfinding", "placeholder text", "O(V+E)", "placeholder text"],
-              ["Greedy Best First Search", "placeholder text", "O(bᵐ)", "placeholder text"]]
+ALGORITHMS = [["Linear Search", "A search algorithm that checks each element in a list\n sequentially, querying whether it is the same as a search value\n and returing it if true.", "O(n)", "Linear search iterates over each\n element once"], #name, desc, O(n), O(n) desc
+              ["Binary Search", "A divide and conquer search algorithm that uses a sorted list.\n The middle element in the list is chosen and compared to the\n search value and half the list is discarded each time depending\n on whether the middle element is bigger than the search value or not.", "O(log(n))", "Binary search is a divide and\n conquer algorithm"], 
+              ["Bubble Sort", "A sort which compares two adjacent elements and swaps them if\n they are out of order. This process repeats for multiple iterations\n until the list is sorted.", "O(n²)", "Bubble search has several\n passes in which it iterates over\n elements"], 
+              ["Insertion Sort", "A sort that takes elements from a main list and places them in\n the correct place in a single sorted sublist.", "O(n²)", "Insertion sort searches for\n where to place elements in\n a sorted list n times (n * n)"], 
+              ["Merge Sort", "A sort that divides the list until each element is in its own sublist.\n Each small sublist is merged, with elements being placed in the\n correct order.", "O(nlog(n))", "Merge sort divides the list and\n then merges them (logn * n)"], 
+              ["Quick Sort", "A sort that chooses a pivot element and moves all elements\n smaller and larger than it to different sublists. A divide and conquer\n approach is used to continue selecting pivots until the data is sorted.", "O(nlog(n))", "Quick sort partitions the list\n logn times and then checks\n each element"], 
+              ["Radix Sort", "A sort that uses several numbered buckets from 0 to 9. Each\n element is placed in a bucket based on the value of a selected digit\n (starting from least significant and progressing to most significant)\n and then dequeued out of them after each iteration.", "O(nd)", "Radix sort adds each element to\n a bucket d times\n (d is number of digits)"], 
+              ["Dijkstra's Pathfinding", "A pathfinding algorithm that sequentially visits the nearest unvisited\n node until the correct node is found. Then the path that was taken\n to get there is returned.", "O((V+E)log(V))", "placeholder text"],
+              ["A* Pathfinding", "A pathfinding algorithm that visits the next most promising node\n through the use of heuristic values and the distance from the start.\n Once the correct node is found the path that was taken to get\n there is returned.", "O(V+E)", "placeholder text"],
+              ["Greedy Best First Search", "A pathfinding algorithm that selects the unvisited node with the\n lowest heuristic value. This continues until the correct node is found.\n Then the path that was taken is returned.", "O(bᵐ)", "placeholder text"]]
 
 def clearScreen(gridClear):
     for widget in window.winfo_children():
@@ -229,7 +229,7 @@ def initialiseAlgSelect():
 
 def displayAlgInfo(algidx):
     titleLabel = ttk.Label(window, text=ALGORITHMS[algidx][0], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
-    descLabel = ttk.Label(window, text=ALGORITHMS[algidx][1], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
+    descLabel = ttk.Label(window, text=ALGORITHMS[algidx][1], background="white", anchor="center", font=("Roboto Mono", 15), foreground="black")
     visualiseButton = tk.Button(window, text="Visualise!" if algidx <= 6 else "Coming soon", background="light green" if algidx <= 6 else "#CBC3E3", font=("Roboto Mono", 20, "bold"), command=lambda idx=algidx: initialiseVisualisation(idx) if algidx <= 6 else None)
 
     titleLabel.grid(row=1, column=1, sticky="nesw")
@@ -419,13 +419,11 @@ def updateSpeed(event):
     
 def pauseAlgorithm():
     global inProgress
-    print(window.tk.call('after', 'info'))
     inProgress = False
     externalWidgets["startButton"].config(text = "⏵", command=lambda: resumeAlgorithm())
 
 def resumeAlgorithm():
     global inProgress
-    print(window.tk.call('after', 'info'))
     inProgress = True
     externalWidgets["startButton"].config(text = "⏸", command=lambda: pauseAlgorithm())
 
