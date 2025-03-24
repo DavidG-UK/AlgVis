@@ -33,13 +33,13 @@ MAXSCREENWIDTH = 1300
 MAXSCREENHEIGHT = 400
 MAXBARWIDTH = 100
 MAXBARHEIGHT = 200
-ALGORITHMS = [["Linear Search", "placeholder text", "O(n)", "Linear search iterates over each element once"], #name, desc, O(n), O(n) desc
-              ["Binary Search", "placeholder text", "O(log(n))", "Binary search is a divide and conquer algorithm"], 
-              ["Bubble Sort", "placeholder text", "O(n²)", "Bubble search has several passes in which it iterates over elements"], 
-              ["Insertion Sort", "placeholder text", "O(n²)", "Insertion sort searches for where to place elements in a sorted list n times (n * n)"], 
-              ["Merge Sort", "placeholder text", "O(nlog(n))", "Merge sort divides the list and then merges them (logn * n)"], 
-              ["Quick Sort", "placeholder text", "O(nlog(n))", "Quick sort partitions the list logn times and then checks each element"], 
-              ["Radix Sort", "placeholder text", "O(nd)", "Radix sort adds each element to a bucket d times (d is number of digits)"], 
+ALGORITHMS = [["Linear Search", "placeholder text", "O(n)", "Linear search iterates over each\n element once"], #name, desc, O(n), O(n) desc
+              ["Binary Search", "placeholder text", "O(log(n))", "Binary search is a divide and\n conquer algorithm"], 
+              ["Bubble Sort", "placeholder text", "O(n²)", "Bubble search has several\n passes in which it iterates over\n elements"], 
+              ["Insertion Sort", "placeholder text", "O(n²)", "Insertion sort searches for\n where to place elements in\n a sorted list n times (n * n)"], 
+              ["Merge Sort", "placeholder text", "O(nlog(n))", "Merge sort divides the list and\n then merges them (logn * n)"], 
+              ["Quick Sort", "placeholder text", "O(nlog(n))", "Quick sort partitions the list\n logn times and then checks\n each element"], 
+              ["Radix Sort", "placeholder text", "O(nd)", "Radix sort adds each element to\n a bucket d times\n (d is number of digits)"], 
               ["Dijkstra's Pathfinding", "placeholder text", "O((V+E)log(V))", "placeholder text"],
               ["A* Pathfinding", "placeholder text", "O(V+E)", "placeholder text"],
               ["Greedy Best First Search", "placeholder text", "O(bᵐ)", "placeholder text"]]
@@ -56,7 +56,7 @@ def clearScreen(gridClear):
 
 def initialiseHome():
     clearScreen(True)
-    
+    window.config(background="black")
     window.columnconfigure((0, 2), weight=1, uniform="a")
     window.columnconfigure(1, weight=2, uniform="a")
 
@@ -102,6 +102,7 @@ def initialiseOptions():
         optionButton.grid(row=(i*2)+1, column=2, sticky="nesw")
 
 def displayTutorial(stage):
+    global planeCanvas
     clearScreen(True)
     
     labelText = ["To enter the visualisation screen, click algorithms and then the algorithm you wish to visualise",
@@ -117,7 +118,6 @@ def displayTutorial(stage):
     window.rowconfigure(2, weight=2, uniform="f")
     window.rowconfigure(3, weight=4, uniform="f")
 
-    displayBack("home", "nw")
     expLabel = ttk.Label(window, text=labelText[stage], background="light blue", anchor="center", font=("Roboto Mono", 18, "bold"), foreground="black")
     expLabel.grid(row=2, column=1, sticky="nesw", columnspan=2)
     forward = tk.Button(window, text="⏵", background="white", font=("Roboto Mono", 14, "bold"), command=lambda stage = stage: displayTutorial(stage + 1) if stage < len(labelText) - 1 else initialiseHome())
@@ -155,33 +155,62 @@ def displayTutorial(stage):
     if stage == 2: # taskbar tutorial
         tutFrame.rowconfigure((0, 2), weight=3, uniform="i")
         tutFrame.rowconfigure(1, weight=2, uniform="i")
-        tutFrame.columnconfigure((0, 2), weight=1, uniform="i")
-        tutFrame.columnconfigure(1, weight=10, uniform="i")
+        tutFrame.columnconfigure(0, weight=1, uniform="i")
         taskFrame = createTaskbar(False, None, tutFrame, None)
-        taskFrame.grid(row=1, column=1, sticky="nesw")
+        taskFrame.grid(row=1, column=0, sticky="nesw")
     
     if stage == 3: # visualisation tutorial
         tutFrame.rowconfigure(0, weight=1, uniform="j")
         tutFrame.rowconfigure(1, weight=2, uniform="j")
         tutFrame.rowconfigure(2, weight=4, uniform="j")
-        tutFrame.columnconfigure((0, 2), weight=1, uniform="j")
-        tutFrame.columnconfigure(1, weight=10, uniform="j")
+        tutFrame.columnconfigure(0, weight=1, uniform="j")
         taskFrame = createTaskbar(False, None, tutFrame, None)
-        planeLabel = ttk.Label(tutFrame, text="plane", background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
-        taskFrame.grid(row=1, column=1, sticky="nesw")
-        planeLabel.grid(row=2, column=1, sticky="nesw")
+        planeCanvas = tk.Canvas(tutFrame, bg="light grey")
+        tutRects = []
+        for i in range(3):
+            tutRects.append(planeCanvas.create_rectangle(((planeCanvas.winfo_reqwidth()/2) + 100*(i-1)), 50, ((planeCanvas.winfo_reqwidth()/2) + 100*(i-1) + 50), 150))
+        externalWidgets["TutorialRects"] = tutRects
+        taskFrame.grid(row=1, column=0, sticky="nesw")
+        planeCanvas.grid(row=2, column=0, sticky="nesw")
+
     if stage == 4:
-        pass
-        # do when visualisation is complete
+        tutFrame.columnconfigure((0, 4), weight=1, uniform="j")
+        tutFrame.columnconfigure((1, 3), weight=4, uniform="j")
+        tutFrame.columnconfigure(2, weight=1, uniform="j")
+        tutFrame.rowconfigure((0, 1, 2, 3), weight=1, uniform="j")
+
+        exampleText = ["Selecting pointer", "Starting next swap", "Swapping elements as left element is bigger than right element", "Selecting pointer", "Selecting pointer", "Starting next swap","Swapping elements as left element is bigger than right element", "Starting next swap"]
+        processFrame = tk.Frame(tutFrame)
+        processFrame.columnconfigure(0, weight=1, uniform="j")
+        processFrame.rowconfigure((0, 1, 2, 3, 4, 5, 6, 7), weight=1, uniform="j")
+        for i in range(8):
+            ttk.Label(processFrame, text=exampleText[i], background="white" if i != 0 else "light blue", anchor="center", font=("Roboto Mono", 10, "bold"), foreground="black").grid(row=i, column=0, sticky="nesw")
+        
+        processFrame.grid(row=1, column=3, rowspan=2, sticky="nesw")
+
+        onLabel = ttk.Label(tutFrame, text=ALGORITHMS[3][2], background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
+        onLabel.grid(row=1, column=1, sticky="nesw")
+
+        onDescLabel = ttk.Label(tutFrame, text=ALGORITHMS[3][3], background="white", anchor="center", font=("Roboto Mono", 10, "bold"), foreground="black")
+        onDescLabel.grid(row=2, column=1, sticky="nesw")
+
     if stage == 5: # end
         tutFrame.rowconfigure(0, weight=1, uniform="l")
         tutFrame.columnconfigure(0, weight=1, uniform="l")
         smileLabel = ttk.Label(tutFrame, text=":D", background="white", anchor="center", font=("Roboto Mono", 20, "bold"), foreground="black")
         smileLabel.grid(row=0, column=0, sticky="nesw")
+    
+    displayBack("home", "nesw")
     tutFrame.grid(row=3, column=1, sticky="nesw", columnspan=2)
 
+def tutorialStartCommand():
+    global planeCanvas
+    for i in range(len(externalWidgets["TutorialRects"])):
+        planeCanvas.itemconfig(externalWidgets["TutorialRects"][i], fill="light blue")
+    
 def initialiseAlgSelect():
     clearScreen(True)
+    window.config(background="black")
 
     algButtons = []
 
@@ -224,6 +253,7 @@ def initialiseVisualisation(algidx):
 
     taskbar = createTaskbar(True, algidx, window, algData) # calls function to create taskbar frame
     visCanvas = tk.Canvas(window, bg='light grey')
+    window.config(background="light grey")
 
     if options[0][1] == True: # display of optional featres
         lineLabels = []
@@ -250,13 +280,76 @@ def initialiseVisualisation(algidx):
     else:
         setupRadix(algData)
 
-    gridFrame = ttk.Frame(window)
-    gridFrame.rowconfigure(0, weight=1, uniform="k")
-    gridFrame.columnconfigure(0, weight=1, uniform="k")
+    setupKeyFrame(algidx, algData)
 
-    gridFrame.grid(row=2, column=2, sticky="nesw", rowspan=2)
     taskbar.grid(row=0, column=1, sticky="nesw", columnspan=3)
     visCanvas.grid(row=1, column=0, sticky="nesw", columnspan=4)
+
+def setupKeyFrame(algidx, algData):
+    keyFrame = ttk.Frame(window)
+    if algidx != 6:
+        keyFrame.rowconfigure((0, 1, 2), weight=1, uniform="l")
+        keyFrame.columnconfigure(1, weight=1, uniform="l") 
+        keyFrame.columnconfigure(0, weight=2, uniform="l")
+        keyFrame.columnconfigure(2, weight=5, uniform="l")
+    else:
+        keyFrame.rowconfigure((0, 1), weight=1, uniform="l")
+        keyFrame.columnconfigure(0, weight=1, uniform="l")
+
+        textFrame = ttk.Frame(keyFrame)
+        textFrame.rowconfigure(0, weight=1, uniform="m")
+        for i in range(len(str(max(algData)))):
+            textFrame.columnconfigure(i+1, weight=1, uniform="m")
+        
+        textFrame.columnconfigure((0, i+2), weight=1, uniform="m")
+        textFrame.grid(row=0, column=0, sticky="nesw")
+
+        subKeyFrame = ttk.Frame(keyFrame)
+        subKeyFrame.rowconfigure((0, 1, 2), weight=1, uniform="n")
+        subKeyFrame.columnconfigure(0, weight=2, uniform="n")
+        subKeyFrame.columnconfigure(1, weight=1, uniform="n")
+        subKeyFrame.columnconfigure(2, weight=5, uniform="n")
+        subKeyFrame.grid(row=1, column=0, sticky="nesw")
+
+    if algidx == 0 or algidx == 1:
+        red = ttk.Label(keyFrame, text="", background="red").grid(row=0, column=0, sticky="nesw")
+        green = ttk.Label(keyFrame, text="", background="light green").grid(row=1, column=0, sticky="nesw")
+        redDesc = ttk.Label(keyFrame, text="Pointer, Element not found", font=("Roboto Mono", 10, "bold")).grid(row=0, column=2, sticky="nesw")
+        greenDesc = ttk.Label(keyFrame, text="Element Found", font=("Roboto Mono", 10, "bold")).grid(row=1, column=2, sticky="nesw")
+
+    if algidx == 2 or algidx == 3:
+        blue = ttk.Label(keyFrame, text="", background="light blue").grid(row=0, column=0, sticky="nesw")
+        green = ttk.Label(keyFrame, text="", background="light green").grid(row=1, column=0, sticky="nesw")
+        blueDesc = ttk.Label(keyFrame, text="Bar swapping", font=("Roboto Mono", 10, "bold")).grid(row=0, column=2, sticky="nesw")
+        greenDesc = ttk.Label(keyFrame, text="Sort completed", font=("Roboto Mono", 10, "bold")).grid(row=1, column=2, sticky="nesw")
+
+    if algidx == 4 or algidx == 5:
+        blue = ttk.Label(keyFrame, text="", background="light blue").grid(row=0, column=0, sticky="nesw")
+        green = ttk.Label(keyFrame, text="", background="light green").grid(row=1, column=0, sticky="nesw")
+        red = ttk.Label(keyFrame, text="", background="red").grid(row=2, column=0, sticky="nesw")
+        blueDesc = ttk.Label(keyFrame, text="Bar swapping", font=("Roboto Mono", 10, "bold")).grid(row=0, column=2, sticky="nesw")
+        greenDesc = ttk.Label(keyFrame, text="Sort completed", font=("Roboto Mono", 10, "bold")).grid(row=1, column=2, sticky="nesw")
+        redDesc = ttk.Label(keyFrame, text="Pointer", font=("Roboto Mono", 10, "bold")).grid(row=2, column=2, sticky="nesw")
+
+    if algidx == 6:
+        index = 0
+        keyDigits = []
+        for i in range(len(str(max(algData)))):
+            keyDigits.append(ttk.Label(textFrame, text=str(index), font=("Roboto Mono", 15, "bold")))
+            keyDigits[i].grid(row=0, column=(i+1), sticky="nesw")
+            if index == 9:
+                index = 0
+            else:
+                index += 1
+        
+        externalWidgets["keyDigits"] = keyDigits
+        
+        blue = ttk.Label(subKeyFrame, text="", background="blue").grid(row=0, column=0, sticky="nesw")
+        green = ttk.Label(subKeyFrame, text="", background="green").grid(row=1, column=0, sticky="nesw")   
+        blueDesc = ttk.Label(subKeyFrame, text="Element being moved into or out of bucket", font=("Roboto Mono", 10, "bold")).grid(row=0, column=2, sticky="nesw")
+        greenDesc = ttk.Label(subKeyFrame, text="Sort completed", font=("Roboto Mono", 10, "bold")).grid(row=1, column=2, sticky="nesw")
+
+    keyFrame.grid(row=2, column=2, sticky="nesw", rowspan=2)
 
 def updatelineText(data):
     global lineText
@@ -270,6 +363,9 @@ def updatelineText(data):
 
         for i in range(len(externalWidgets["textLabels"])):
             externalWidgets["textLabels"][i].config(text=lineText[i])
+
+        if lineText[0] != "":
+            externalWidgets["textLabels"][0].config(background = "light blue")
 
 def displayBack(backScreen, xyAlignment):
     if backScreen == "home":
@@ -290,11 +386,12 @@ def createTaskbar(active, algidx, master, algData):
     speedScale = tk.Scale(taskFrame, from_=0.1, to=10, orient="horizontal", variable=speed, command=updateSpeed, label="Execution speed", resolution=0.1)
     speedScale.set(speed)
 
-    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Roboto Mono", 14, "bold"), command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data) if active == True else None) # creating widgets and defining behaviour
+    startButton = tk.Button(taskFrame, text="⏵", background="white", font=("Roboto Mono", 14, "bold"), command=lambda algIdx = algidx, data = algData: startAlgorithm(algIdx, data) if active == True else tutorialStartCommand()) # creating widgets and defining behaviour
 
     externalWidgets["startButton"] = startButton
 
-    displayBack("algSelect", "nesw")
+    if active == True:
+        displayBack("algSelect", "nesw") 
 
     inputFrame = tk.Frame(taskFrame)
 
@@ -322,11 +419,13 @@ def updateSpeed(event):
     
 def pauseAlgorithm():
     global inProgress
+    print(window.tk.call('after', 'info'))
     inProgress = False
     externalWidgets["startButton"].config(text = "⏵", command=lambda: resumeAlgorithm())
 
 def resumeAlgorithm():
     global inProgress
+    print(window.tk.call('after', 'info'))
     inProgress = True
     externalWidgets["startButton"].config(text = "⏸", command=lambda: pauseAlgorithm())
 
@@ -342,9 +441,10 @@ def restartAlgortihm(algidx):
     startAlgorithm(algidx, data)
 
 def setupCanvas(data):
-    global visCanvas, inProgress
+    global visCanvas, inProgress, newData
     
     inProgress = False
+    newData = False
     updatelineText(None)
 
     padX = 50
@@ -413,15 +513,18 @@ def searchVisualisation(data, pointerList, value, pointerIndex, algidx):
                 endAlgorithm(algidx)
         else:
             if algidx == 0:
-                updatelineText("Checking next element")
+                updatelineText("Checking next element in list")
             else:
-                updatelineText("Discarding larger half, checking next element")
+                if pointerList[pointerIndex + 1] > pointerList[pointerIndex]:
+                    updatelineText("Discarding smaller half, checking next element")
+                else:
+                    updatelineText("Discarding larger half, checking next element")
             visCanvas.itemconfig(rectIdData[0] + pointerList[pointerIndex], fill="red")
             pointerIndex += 1
             visCanvas.after(timePause * 100, searchVisualisation, data, pointerList, value, pointerIndex, algidx)
 
     elif newData == False:
-        visCanvas.after(timePause * 20, searchVisualisation, data, pointerList, value, pointerIndex, algidx)
+        visCanvas.after(200, searchVisualisation, data, pointerList, value, pointerIndex, algidx)
     else:
         newData = False
 
@@ -449,7 +552,7 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
         
         else:
             if aPositions == []:
-                updatelineText("Swapping elements")
+                updatelineText("Swapping elements as left element is bigger than right element")
                 bPositions, aPositions, idOrder = createStages(swapList, swapIndex, rectIdData)
 
             visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='light blue')
@@ -463,7 +566,7 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
                 visCanvas.after(timePause, moveBars, swapList, swapIndex, index, bPositions, aPositions, idOrder, False, algidx)
             else:
                 if not pauseComplete:
-                    visCanvas.after(timePause*20, moveBars, swapList, swapIndex, index, bPositions, aPositions, idOrder, True, algidx)
+                    visCanvas.after(timePause*10, moveBars, swapList, swapIndex, index, bPositions, aPositions, idOrder, True, algidx)
                 else:
                     visCanvas.itemconfig(idOrder[swapList[swapIndex][0][1]], fill='')
                     visCanvas.itemconfig(idOrder[swapList[swapIndex][0][0]], fill='')
@@ -474,7 +577,7 @@ def moveBars(swapList, swapIndex, index, bPositions, aPositions, idOrder, pauseC
                         visCanvas.after(timePause, moveBars, swapList, swapIndex, 0, [], [], idOrder, False, algidx)     
 
     elif newData == False:
-        visCanvas.after(timePause * 20, moveBars, swapList, swapIndex, index, bPositions, aPositions, idOrder, False, algidx) 
+        visCanvas.after(200, moveBars, swapList, swapIndex, index, bPositions, aPositions, idOrder, False, algidx) 
     else:
         newData = False 
 
@@ -531,10 +634,12 @@ def createStages(swapList, swapIndex, idOrder):
     return aStages, bStages, idOrder
 
 def setupRadix(data):
-    global visCanvas, inProgress
+    global visCanvas, inProgress, newData
 
     inProgress = False
+    newData = False
     updatelineText(None)
+    setupKeyFrame(6, data)
 
     SPACING = 10
     padX = 100
@@ -560,8 +665,12 @@ def setupRadix(data):
     for i in range(10):
         bucketIdData.append(visCanvas.create_text(padX + (bucketSpace * i) + (SPACING * i), MAXSCREENHEIGHT - SPACING, text = str(i), fill="black", font=("Roboto Mono", 15)))
     
-def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets, algidx):
+def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets, algidx, digit):
     global visCanvas, speed, inProgress, newData
+    externalWidgets["keyDigits"][digit].config(foreground="red")
+    if digit != len(str(max(data))) - 1:
+        externalWidgets["keyDigits"][digit + 1].config(foreground="black")
+
     timePause = int(14/speed)
     if timePause == 0:
         timePause = 1
@@ -569,13 +678,15 @@ def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets, a
     if inProgress == True:
         if swapIndex == len(swapList):
             updatelineText("List is sorted, ending algorithm")
+            externalWidgets["keyDigits"][0].config(foreground="black")
             for obj in textIdData:
                 visCanvas.itemconfig(obj, fill="green")
-                endAlgorithm(algidx)
+            endAlgorithm(algidx)
         else:
             textX, textY = visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[0], visCanvas.coords(textIdData[swapList[swapIndex][0][0] - 1])[1]
             if stages == []:
                 stages = animateMove(swapList[swapIndex], len(data), len(buckets[swapList[swapIndex][0][1]]), (swapIndex % len(data)) if swapIndex != 0 else len(data))
+                visCanvas.itemconfig(textIdData[swapList[swapIndex][0][0] - 1], fill="blue")
 
             visCanvas.move(textIdData[swapList[swapIndex][0][0] - 1], stages[stageIndex][0] - textX, stages[stageIndex][1] - textY)
 
@@ -583,19 +694,26 @@ def radixVisualisation(data, swapList, swapIndex, stageIndex, stages, buckets, a
                 if swapList[swapIndex][1] == "move in":
                     buckets[swapList[swapIndex][0][1]].append(textIdData[swapList[swapIndex][0][0] - 1])
                 else:
-                    del buckets[swapList[swapIndex][0][1]][0]        
-                visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex + 1, 0, [], buckets, algidx)
-            else:
-                visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex, stageIndex + 1, stages, buckets, algidx)
+                    del buckets[swapList[swapIndex][0][1]][0] 
+                    if swapIndex + 1 != len(swapList):
+                        if swapList[swapIndex + 1][1] == "move in":
+                            digit -= 1
 
-        if stageIndex == 0:
-            if swapList[swapIndex][1] == "move in":
-                updatelineText("Moving element into bucket " + str(swapList[swapIndex][0][1]))
+                visCanvas.itemconfig(textIdData[swapList[swapIndex][0][0] - 1], fill="black")
+                visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex + 1, 0, [], buckets, algidx, digit)
             else:
-                updatelineText("Moving element out of bucket " + str(swapList[swapIndex][0][1]))
+                visCanvas.after(timePause, radixVisualisation, data, swapList, swapIndex, stageIndex + 1, stages, buckets, algidx, digit)
+
+            if stageIndex == 0:
+                if swapList[swapIndex][1] == "move in":
+                    updatelineText("Moving element into bucket " + str(swapList[swapIndex][0][1]))
+                    # if swapIndex - 1 != 0:
+                    #     if swapList[swapIndex - 1][1] 
+                else:
+                    updatelineText("Moving element out of bucket " + str(swapList[swapIndex][0][1]))
 
     elif newData == False:
-        visCanvas.after(timePause * 20, radixVisualisation, data, swapList, swapIndex, stageIndex, stages, buckets, algidx)
+        visCanvas.after(200, radixVisualisation, data, swapList, swapIndex, stageIndex, stages, buckets, algidx)
     else:
         newData = False
 
@@ -736,7 +854,7 @@ def validateData(userInput, algidx):
                     data = list(map(int, userInput.split(",")))
                     messagebox.showwarning(message="In future, please enter data in the form 'x y z'")
                 except:
-                    messagebox.showwarning(message="entered data could not be read. please enter data in the form 'x y z'")
+                    messagebox.showwarning(message="entered data could not be read. please enter data in the form 'x y z' using only integers")
         
         if data != None:
             algData = data  
@@ -808,7 +926,7 @@ def startAlgorithm(algIdx, data):
         if algIdx >= 2 and algIdx <= 5:
             moveBars(swapList, 0, 0, [], [], rectIdData, False, algIdx)
         if algIdx == 6:
-            radixVisualisation(data, swapList, 0, 0, [], [[] for _ in range(10)], algIdx)
+            radixVisualisation(data, swapList, 0, 0, [], [[] for _ in range(10)], algIdx, len(str(max(data))) - 1)
 
         externalWidgets["startButton"].config(text = "⏸", command=lambda: pauseAlgorithm())
 
